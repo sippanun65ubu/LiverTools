@@ -1,0 +1,4 @@
+django
+streamlit
+djangorestframework
+django-cors-headers
