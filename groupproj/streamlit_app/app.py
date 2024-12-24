@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import pandas as pd
+import plotly.express as px
 
 # Title
 st.title('🧠 Habit Tracker Dashboard')
@@ -69,12 +70,27 @@ try:
                     st.info("No frequency data available.")
             else:
                 st.warning("Frequency column missing in habits data.")
+
+        # Additional Visualization: Habit Goals
+        st.header('🎯 Goals Distribution')
+        if 'Goal' in habits_df.columns:
+            goal_counts = habits_df['Goal'].value_counts().reset_index()
+            goal_counts.columns = ['Goal', 'Count']
+            if not goal_counts.empty:
+                st.write("**Goal Count by Type**")
+                st.dataframe(goal_counts)
+
+                st.write("**Bar Chart: Goals Distribution** (Interactive)")
+                fig = px.bar(goal_counts, x='Goal', y='Count', title='Goals Distribution', text='Count')
+                st.plotly_chart(fig)
+            else:
+                st.info("No goal data available.")
         else:
-            st.info("No habits data available.")
+            st.warning("Goal column missing in habits data.")
+
 
     else:
         st.error(f"❌ Failed to fetch data from API. Status Code: {response.status_code}")
 
 except requests.exceptions.RequestException as e:
     st.error(f"⚠️ Error connecting to the API: {e}")
-
