@@ -32,6 +32,24 @@
             {% endfor %}
         </tbody>
     </table>
+    
+    {% if order.payment_slip %}
+        <p>คุณได้อัปโหลดสลิปการโอนเงินแล้ว</p>
+        <img src="{{ order.payment_slip.url }}" width="300">
+        <!-- ปุ่มเสร็จสิ้น -->
+        <form method="post" action="{% url 'order_complete' order.id %}">
+            {% csrf_token %}
+            <button type="submit">เสร็จสิ้น</button>
+        </form>
+    {% else %}
+        <p>กรุณาอัปโหลดสลิปการโอนเงิน</p>
+        <form method="post" action="{% url 'upload_payment_slip' order.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="payment_slip" required>
+            <button type="submit">อัปโหลด</button>
+        </form>
+    {% endif %}
+
     <p><a href="{% url 'product_list' %}">กลับไปยังรายการสินค้า</a></p>
 </body>
 </html>

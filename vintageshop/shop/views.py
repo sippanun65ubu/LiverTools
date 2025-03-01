@@ -55,8 +55,6 @@ def product_list(request):
     return render(request, 'shop/product_list.html', context)
 
 
-
-
 def admin_dashboard(request):
     products = Product.objects.all()
     form = ProductForm()
@@ -110,18 +108,18 @@ def add_to_cart(request, product_id):
     quantity = int(request.POST.get('quantity', 1))
     cart = get_or_create_cart(request.user)
 
+    # ตรวจสอบว่าสินค้านี้มีอยู่ในตะกร้าแล้วหรือไม่
     cart_item, created = CartItem.objects.get_or_create(
         cart=cart,
         product=product,
+        defaults={'quantity': quantity}  # ตั้งค่าเริ่มต้นถ้ายังไม่มีสินค้า
     )
-    if not created:
-        cart_item.quantity += quantity
-    else:
-        cart_item.quantity = quantity
-    cart_item.save()
-    print("add_to_cart called with product_id:", product_id)
-    return redirect('product_list')
 
+    if not created:
+        cart_item.quantity += quantity  # ถ้ามีอยู่แล้วให้เพิ่มจำนวนสินค้า
+        cart_item.save()
+
+    return redirect('cart_detail')
 
 
 @login_required
@@ -146,38 +144,46 @@ def update_cart_item(request, item_id):
 @login_required
 def checkout(request):
     if request.method == 'POST':
-        # Retrieve the user’s cart
         cart = get_or_create_cart(request.user)
         items = cart.items.select_related('product')
 
         if not items.exists():
-            # Cart is empty, redirect or show message
             return redirect('cart_detail')
 
-        # Create an Order
+        # สร้างคำสั่งซื้อ
         order = Order.objects.create(user=request.user)
-        
-        # Move cart items into OrderItem
+
+        # ย้ายสินค้าจากตะกร้ามาเป็นคำสั่งซื้อ
         for item in items:
             OrderItem.objects.create(
                 order=order,
                 product=item.product,
                 quantity=item.quantity,
-                price=item.product.price  # or store price at the time of purchase
+                price=item.product.price
             )
-            
-            # Optional: reduce product inventory
+            # ลดจำนวนสินค้าในสต็อก
             item.product.quantity -= item.quantity
             item.product.save()
 
-        # Clear the cart
+        # ลบตะกร้าสินค้า
         items.delete()
 
-        # Redirect to an order confirmation page or payment gateway
+        # ไปหน้าคำสั่งซื้อสำเร็จ
         return redirect('order_success', order_id=order.id)
-    
-    # If GET request, show a confirmation page or redirect
+
     return redirect('cart_detail')
+
+@login_required
+def upload_payment_slip(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    
+    if request.method == 'POST' and 'payment_slip' in request.FILES:
+        order.payment_slip = request.FILES['payment_slip']
+        order.save()
+        return redirect('order_success', order_id=order.id)
+
+    return render(request, 'shop/upload_slip.html', {'order': order})
+
 
 @login_required
 def order_success(request, order_id):
@@ -194,3 +200,16 @@ def get_or_create_cart(user):
         cart = Cart.objects.create(user=None)
         return cart
 
+def order_complete(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    
+    # อัปเดตสถานะคำสั่งซื้อให้เป็น 'เสร็จสิ้น'
+    order.status = "completed"
+    order.save()
+
+    return redirect('product_list')  # กลับไปยังหน้าแรกหลังจากทำรายการเสร็จ
+
+@login_required
+def payment_status(request):
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')  # แสดงคำสั่งซื้อล่าสุดก่อน
+    return render(request, 'shop/payment_status.html', {'orders': orders})

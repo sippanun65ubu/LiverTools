@@ -51,10 +51,11 @@ class CartItem(models.Model):
 class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    # optional fields: shipping_address, payment_method, status, etc.
+    payment_slip = models.ImageField(upload_to='payment_slips/', blank=True, null=True)  # อัปโหลดสลิป
 
     def __str__(self):
         return f"Order #{self.id} by {self.user.username}"
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')

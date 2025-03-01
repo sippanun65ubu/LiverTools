@@ -40,10 +40,12 @@
             <a href="{% url 'logout' %}"><button>ออกจากระบบ</button></a>
             <a href="{% url 'edit_profile' %}"><button>แก้ไขโปรไฟล์</button></a>
             <a href="{% url 'add_address' %}"><button>เพิ่มที่อยู่</button></a>
+            <a href="{% url 'payment_status' %}"><button>📋 ตรวจสอบสถานะคำสั่งซื้อ</button></a>
         </p>
     {% else %}
         <a href="{% url 'login' %}"><button>Login</button></a>
     {% endif %}
+
 
     <!-- Sidebar layout -->
     <div style="display: flex;">
@@ -107,37 +109,35 @@
         <div style="flex-grow: 1;">
             <ul>
                 {% for product in products %}
-                    <li>
-                        <strong>{{ product.name }}</strong> - ราคา: {{ product.price }} บาท
-                        <br>ขนาด: {{ product.size }}
-                        <br>หมวดหมู่: 
-                        {% if product.category.all %}
-                            {% for cat in product.category.all %}
-                                {{ cat.name }}{% if not forloop.last %}, {% endif %}
-                            {% endfor %}
-                        {% else %}
-                            (ไม่มีหมวดหมู่)
-                        {% endif %}
-                        <br>{{ product.description }}
-                        {% if product.image %}
-                            <br><img src="{{ product.image.url }}" width="100">
-                        {% endif %}
-                        <br>จำนวนคงเหลือ: {{ product.quantity }}
-                        <br>
-                        {% if user.is_authenticated %}
-                        <form method="post" action="{% url 'add_to_cart' product.id %}">
-                            {% csrf_token %}
-                            <input type="number" name="quantity" value="1" min="1">
-                            <button type="submit">เพิ่มใส่ตะกร้า</button>              
-                        {% else %}
-                            <a href="{% url 'register' %}"><button>สมัครสมาชิกเพื่อซื้อสินค้า</button></a>
-                        {% endif %}
-                    </li>
-                {% empty %}
-                    <p>ไม่พบสินค้า</p>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
-</body>
-</html>
+                <li>
+                    <strong>{{ product.name }}</strong> - ราคา: {{ product.price }} บาท
+                    <br>ขนาด: {{ product.size }}
+                    <br>หมวดหมู่: 
+                    {% if product.category.all %}
+                        {% for cat in product.category.all %}
+                            {{ cat.name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        (ไม่มีหมวดหมู่)
+                    {% endif %}
+                    <br>{{ product.description }}
+                    {% if product.image %}
+                        <br><img src="{{ product.image.url }}" width="100">
+                    {% endif %}
+                    <br>จำนวนคงเหลือ: {{ product.quantity }}
+                    <br>
+                    {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'add_to_cart' product.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        <input type="number" name="quantity" value="1" min="1">
+                        <button type="submit">เพิ่มใส่ตะกร้า</button>              
+                    </form>
+                    {% else %}
+                        <a href="{% url 'register' %}"><button>สมัครสมาชิกเพื่อซื้อสินค้า</button></a>
+                    {% endif %}
+                </li>
+            {% empty %}
+             <p>ไม่พบสินค้า</p>
+        {% endfor %}
+                
