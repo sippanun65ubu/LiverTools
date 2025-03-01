@@ -21,6 +21,14 @@
             border: 1px solid #ccc;
             padding: 5px;
         }
+        /* Scrollable container for sizes */
+        .size-scroll {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -45,7 +53,17 @@
                 <!-- Search box -->
                 <input type="text" name="q" placeholder="ค้นหาสินค้า..." value="{{ request.GET.q }}">
                 <br><br>
-                
+                {% if user.is_authenticated %}
+                <p>
+                    <a href="{% url 'cart_detail' %}">
+                        <!-- Could be an icon, but here just text. -->
+                        ตะกร้าของคุณ ({{ cart_items_count }})
+                    </a>
+                </p>
+            {% else %}
+                <!-- Possibly hide or show 0 if user is not authenticated -->
+                <p>ตะกร้าของคุณ (0)</p>
+            {% endif %}
                 <!-- Price Range -->
                 <h3>ช่วงราคา</h3>
                 <div class="price-range">
@@ -63,6 +81,18 @@
                             <input type="checkbox" name="category" value="{{ category.id }}"
                                    {% if selected_categories and category.id|stringformat:"s" in selected_categories %}checked{% endif %}>
                             {{ category.name }}
+                        </label><br>
+                    {% endfor %}
+                </div>
+                
+                <!-- Size checkboxes in a scrollable container -->
+                <h3>ขนาดเสื้อ</h3>
+                <div class="size-scroll">
+                    {% for value, label in size_choices %}
+                        <label>
+                            <input type="checkbox" name="size" value="{{ value }}"
+                                   {% if selected_sizes and value in selected_sizes %}checked{% endif %}>
+                            {{ label }}
                         </label><br>
                     {% endfor %}
                 </div>
@@ -95,7 +125,10 @@
                         <br>จำนวนคงเหลือ: {{ product.quantity }}
                         <br>
                         {% if user.is_authenticated %}
-                            <button>เพิ่มใส่ตะกร้า</button>
+                        <form method="post" action="{% url 'add_to_cart' product.id %}">
+                            {% csrf_token %}
+                            <input type="number" name="quantity" value="1" min="1">
+                            <button type="submit">เพิ่มใส่ตะกร้า</button>              
                         {% else %}
                             <a href="{% url 'register' %}"><button>สมัครสมาชิกเพื่อซื้อสินค้า</button></a>
                         {% endif %}

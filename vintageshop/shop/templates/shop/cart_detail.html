@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>ตะกร้าสินค้า</title>
+</head>
+<body>
+    <h1>ตะกร้าสินค้า</h1>
+    
+    {% if items %}
+        <table>
+            <thead>
+                <tr>
+                    <th>สินค้า</th>
+                    <th>ราคา</th>
+                    <th>จำนวน</th>
+                    <th>รวม</th>
+                    <th>การจัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in items %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.product.price }} บาท</td>
+                    
+                    <!-- Update quantity form -->
+                    <td>
+                        <form method="post" action="{% url 'update_cart_item' item.id %}">
+                            {% csrf_token %}
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" style="width:50px;">
+                            <button type="submit">อัปเดต</button>
+                        </form>
+                    </td>
+                    
+                    <td>{{ item.product.price|floatformat:2|add:""|floatformat:2|add:item.quantity|floatformat:2 }} บาท</td>
+                    
+                    <!-- Remove item form -->
+                    <td>
+                        <form method="post" action="{% url 'remove_from_cart' item.id %}">
+                            {% csrf_token %}
+                            <button type="submit" style="color:red;">ลบ</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <td colspan="3">รวมทั้งหมด:</td>
+                <td>{{ total|floatformat:2 }} บาท</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+    {% else %}
+        <p>ตะกร้าของคุณว่างเปล่า</p>
+    {% endif %}
+    
+    <form method="post" action="{% url 'checkout' %}">
+        {% csrf_token %}
+        <button type="submit">ชำระเงิน (Checkout)</button>
+    </form>
+
+    
+    <p><a href="{% url 'product_list' %}">กลับไปยังรายการสินค้า</a></p>
+</body>
+</html>
