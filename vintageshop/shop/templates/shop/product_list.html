@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <title>Vintage Shop</title>
@@ -10,10 +11,12 @@
             display: flex;
             gap: 10px;
         }
+
         .price-range input {
             width: 80px;
             text-align: center;
         }
+
         /* Scrollable container for categories */
         .category-scroll {
             max-height: 200px;
@@ -23,16 +26,18 @@
         }
     </style>
 </head>
+
 <body>
     <h1>รายการสินค้า</h1>
 
-    <!-- Check if user is logged in -->
+    <!-- เช็คว่าผู้ใช้ล็อกอินหรือไม่ -->
     {% if user.is_authenticated %}
-        <p>สวัสดี, {{ user.username }}!  
+        <p>สวัสดี, {{ user.username }}!
             <a href="{% url 'logout' %}"><button>ออกจากระบบ</button></a>
             <a href="{% url 'edit_profile' %}"><button>แก้ไขโปรไฟล์</button></a>
             <a href="{% url 'add_address' %}"><button>เพิ่มที่อยู่</button></a>
         </p>
+        <a href="{% url 'user_chat' %}"><button>Chat กับแอดมิน</button></a> <!-- ปุ่มแชท -->
     {% else %}
         <a href="{% url 'login' %}"><button>Login</button></a>
     {% endif %}
@@ -45,7 +50,7 @@
                 <!-- Search box -->
                 <input type="text" name="q" placeholder="ค้นหาสินค้า..." value="{{ request.GET.q }}">
                 <br><br>
-                
+
                 <!-- Price Range -->
                 <h3>ช่วงราคา</h3>
                 <div class="price-range">
@@ -55,7 +60,7 @@
                 </div>
                 <br>
 
-                <!-- Category checkboxes in a scrollable container -->
+                <!-- Category checkboxes -->
                 <h3>ประเภทสินค้า</h3>
                 <div class="category-scroll">
                     {% for category in categories %}
@@ -66,7 +71,7 @@
                         </label><br>
                     {% endfor %}
                 </div>
-                
+
                 <br>
                 <button type="submit">ตกลง</button>
                 <a href="{% url 'product_list' %}">ลบทั้งหมด</a>
@@ -80,7 +85,7 @@
                     <li>
                         <strong>{{ product.name }}</strong> - ราคา: {{ product.price }} บาท
                         <br>ขนาด: {{ product.size }}
-                        <br>หมวดหมู่: 
+                        <br>หมวดหมู่:
                         {% if product.category.all %}
                             {% for cat in product.category.all %}
                                 {{ cat.name }}{% if not forloop.last %}, {% endif %}
@@ -107,4 +112,5 @@
         </div>
     </div>
 </body>
+
 </html>
