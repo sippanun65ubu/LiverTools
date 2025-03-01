@@ -1,7 +1,0 @@
-django
-streamlit
-djangorestframework
-django-cors-headers
-pandas 
-requests
-plotly
