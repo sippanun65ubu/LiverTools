@@ -16,7 +16,6 @@
     <h2>เพิ่มสินค้า</h2>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <!-- If you want to render fields individually for more control: -->
         
         <p>
             {{ form.name.label_tag }}<br>
@@ -39,17 +38,10 @@
             {{ form.size }}
         </p>
         
-        <!-- Existing Category Dropdown -->
+        <!-- เปลี่ยนให้เป็นช่องกรอกหมวดหมู่ -->
         <p>
-            {{ form.category.label_tag }}<br>
-            {{ form.category }}
-        </p>
-        
-        <!-- New Category Text Field -->
-        <p>
-            {{ form.new_category.label_tag }}<br>
-            <small>{{ form.new_category.help_text }}</small><br>
-            {{ form.new_category }}
+            <label for="id_category">หมวดหมู่</label><br>
+            <input type="text" name="category" id="id_category" placeholder="กรอกหมวดหมู่สินค้า">
         </p>
         
         <p>
@@ -66,13 +58,7 @@
         <li>
             <strong>{{ product.name }}</strong> - ราคา: {{ product.price }} บาท
             <br>ขนาด: {{ product.size }} 
-            <!-- Use product.category.name if product.category is set -->
-            <br>หมวดหมู่: 
-            {% if product.category %}
-                {{ product.category.name }}
-            {% else %}
-                (ยังไม่ได้เลือกหมวดหมู่)
-            {% endif %}
+            <br>หมวดหมู่: {{ product.category|default:"(ไม่มีหมวดหมู่)" }}
             <br>{{ product.description }}
             {% if product.image %}
                 <br><img src="{{ product.image.url }}" width="100">

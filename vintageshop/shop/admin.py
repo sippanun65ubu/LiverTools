@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import Product  # นำเข้า Model ของสินค้า
+from .models import Product, Category
 
-# ลงทะเบียน Model Product ให้แสดงในหน้า Admin
-admin.site.register(Product)
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['name']
+
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ['name', 'category', 'price', 'size', 'quantity']
+    list_filter = ['category', 'size']
+    search_fields = ['name', 'description']
