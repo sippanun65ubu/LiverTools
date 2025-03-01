@@ -1,32 +1,48 @@
-from django.shortcuts import render
-from .models import Product
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Product
 from .forms import ProductForm
 
 def product_list(request):
-    # 🔹 รับค่าจาก URL parameter
-    query = request.GET.get('q', '')  # ค่าค้นหาสินค้า
-    category_filter = request.GET.get('category', '')  # หมวดหมู่สินค้า
+    # Existing filters
+    query = request.GET.get('q', '')
+    category_filter = request.GET.getlist('category')
+    min_price = request.GET.get('min_price')  
+    max_price = request.GET.get('max_price')  
 
-    # 🔹 ดึงสินค้าทั้งหมด
+    # Base queryset
     products = Product.objects.all()
 
-    # 🔹 ถ้ามีการค้นหา ให้กรองสินค้าที่ชื่อคล้ายกัน
+    # Search filter
     if query:
         products = products.filter(name__icontains=query)
 
-    # 🔹 ถ้ามีการเลือกประเภทสินค้า ให้กรองเฉพาะประเภทนั้น
+    # Category filter (multiple checkboxes)
     if category_filter:
-        products = products.filter(category=category_filter)
+        products = products.filter(category__in=category_filter)
 
-    # 🔹 ดึงรายชื่อหมวดหมู่ทั้งหมด
+    if min_price:
+        try:
+            products = products.filter(price__gte=float(min_price))
+        except ValueError:
+            pass  
+
+    if max_price:
+        try:
+            products = products.filter(price__lte=float(max_price))
+        except ValueError:
+            pass
+
+
     categories = Product.objects.values_list('category', flat=True).distinct()
 
     return render(request, 'shop/product_list.html', {
         'products': products,
         'categories': categories,
+        'selected_categories': category_filter,
+        'min_price': min_price,      
+        'max_price': max_price,       
     })
+
 
 def admin_dashboard(request):
     products = Product.objects.all()
@@ -38,7 +54,10 @@ def admin_dashboard(request):
             form.save()
             return redirect('admin_dashboard')  # รีเฟรชหน้าแอดมินหลังเพิ่มสินค้า
 
-    return render(request, 'shop/admin_dashboard.html', {'products': products, 'form': form})
+    return render(request, 'shop/admin_dashboard.html', {
+        'products': products,
+        'form': form
+    })
 
 def delete_product(request, product_id):
     product = get_object_or_404(Product, id=product_id)
@@ -56,4 +75,7 @@ def edit_product(request, product_id):
     else:
         form = ProductForm(instance=product)
 
-    return render(request, 'shop/edit_product.html', {'form': form, 'product': product})
+    return render(request, 'shop/edit_product.html', {
+        'form': form,
+        'product': product
+    })
