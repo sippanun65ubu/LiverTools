@@ -1,24 +1,22 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Product
+from .models import Product, Category
 from .forms import ProductForm
 
 def product_list(request):
-    # Existing filters
     query = request.GET.get('q', '')
+    # Get a list of category IDs from GET parameters (they come as strings)
     category_filter = request.GET.getlist('category')
     min_price = request.GET.get('min_price')  
     max_price = request.GET.get('max_price')  
 
-    # Base queryset
     products = Product.objects.all()
 
-    # Search filter
     if query:
         products = products.filter(name__icontains=query)
 
-    # Category filter (multiple checkboxes)
     if category_filter:
-        products = products.filter(category__in=category_filter)
+        # Filter products that have at least one of the selected categories
+        products = products.filter(category__id__in=category_filter).distinct()
 
     if min_price:
         try:
@@ -32,8 +30,8 @@ def product_list(request):
         except ValueError:
             pass
 
-
-    categories = Product.objects.values_list('category', flat=True).distinct()
+    # Get all categories for the sidebar filter
+    categories = Category.objects.all()
 
     return render(request, 'shop/product_list.html', {
         'products': products,

@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <title>Vintage Shop</title>
@@ -19,54 +19,42 @@
 <body>
     <h1>รายการสินค้า</h1>
 
-        <!-- 🔹 เช็คว่า Login หรือยัง -->
-        {% if user.is_authenticated %}
+    <!-- Check if user is logged in -->
+    {% if user.is_authenticated %}
         <p>สวัสดี, {{ user.username }}!  
-            <a href="{% url 'logout' %}">
-                <button>ออกจากระบบ</button>
-            </a>
-            <a href="{% url 'edit_profile' %}">
-                <button>แก้ไขโปรไฟล์</button>
-            </a>
-            <a href="{% url 'add_address' %}">
-                <button>เพิ่มที่อยู่</button>
-            </a>
+            <a href="{% url 'logout' %}"><button>ออกจากระบบ</button></a>
+            <a href="{% url 'edit_profile' %}"><button>แก้ไขโปรไฟล์</button></a>
+            <a href="{% url 'add_address' %}"><button>เพิ่มที่อยู่</button></a>
         </p>
     {% else %}
-        <a href="{% url 'login' %}">
-            <button>Login</button>
-        </a>
+        <a href="{% url 'login' %}"><button>Login</button></a>
     {% endif %}
-    <!-- Example of a sidebar layout -->
+
+    <!-- Sidebar layout -->
     <div style="display: flex;">
         <!-- Sidebar -->
         <div style="width: 200px; margin-right: 20px;">
             <form method="GET" action="{% url 'product_list' %}">
-                
-                <!-- Search box (existing) -->
+                <!-- Search box -->
                 <input type="text" name="q" placeholder="ค้นหาสินค้า..." value="{{ request.GET.q }}">
                 <br><br>
                 
                 <!-- Price Range -->
                 <h3>ช่วงราคา</h3>
                 <div class="price-range">
-                    <input type="text" name="min_price" 
-                           placeholder="B ใส่ราคาต่ำ" 
-                           value="{{ min_price }}">
+                    <input type="text" name="min_price" placeholder="B ใส่ราคาต่ำ" value="{{ min_price }}">
                     <span>—</span>
-                    <input type="text" name="max_price" 
-                           placeholder="B ใส่ราคาสูง" 
-                           value="{{ max_price }}">
+                    <input type="text" name="max_price" placeholder="B ใส่ราคาสูง" value="{{ max_price }}">
                 </div>
                 <br>
 
-                <!-- Category checkboxes (example) -->
+                <!-- Category checkboxes -->
                 <h3>ประเภทสินค้า</h3>
                 {% for category in categories %}
                     <label>
-                        <input type="checkbox" name="category" value="{{ category }}"
-                               {% if selected_categories and category in selected_categories %}checked{% endif %}>
-                        {{ category }}
+                        <input type="checkbox" name="category" value="{{ category.id }}"
+                               {% if selected_categories and category.id|stringformat:"s" in selected_categories %}checked{% endif %}>
+                        {{ category.name }}
                     </label><br>
                 {% endfor %}
                 
@@ -81,24 +69,26 @@
             <ul>
                 {% for product in products %}
                 <li>
-                    <strong>{{ product.name }}</strong> 
-                    - ราคา: {{ product.price }} บาท
-                    <br>ขนาด: {{ product.size }} 
-                    | หมวดหมู่: {{ product.get_category_display }}
+                    <strong>{{ product.name }}</strong> - ราคา: {{ product.price }} บาท
+                    <br>ขนาด: {{ product.size }}
+                    | หมวดหมู่: 
+                    {% if product.category.all %}
+                        {% for cat in product.category.all %}
+                            {{ cat.name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        (ไม่มีหมวดหมู่)
+                    {% endif %}
                     <br>{{ product.description }}
                     {% if product.image %}
                         <br><img src="{{ product.image.url }}" width="100">
                     {% endif %}
                     <br>จำนวนคงเหลือ: {{ product.quantity }}
-
                     <br>
-
                     {% if user.is_authenticated %}
                         <button>เพิ่มใส่ตะกร้า</button>
                     {% else %}
-                        <a href="{% url 'register' %}">
-                            <button>สมัครสมาชิกเพื่อซื้อสินค้า</button>
-                        </a>
+                        <a href="{% url 'register' %}"><button>สมัครสมาชิกเพื่อซื้อสินค้า</button></a>
                     {% endif %}
                 </li>
                 {% empty %}
