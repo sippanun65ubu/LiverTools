@@ -14,6 +14,13 @@
             width: 80px;
             text-align: center;
         }
+        /* Scrollable container for categories */
+        .category-scroll {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 5px;
+        }
     </style>
 </head>
 <body>
@@ -48,15 +55,17 @@
                 </div>
                 <br>
 
-                <!-- Category checkboxes -->
+                <!-- Category checkboxes in a scrollable container -->
                 <h3>ประเภทสินค้า</h3>
-                {% for category in categories %}
-                    <label>
-                        <input type="checkbox" name="category" value="{{ category.id }}"
-                               {% if selected_categories and category.id|stringformat:"s" in selected_categories %}checked{% endif %}>
-                        {{ category.name }}
-                    </label><br>
-                {% endfor %}
+                <div class="category-scroll">
+                    {% for category in categories %}
+                        <label>
+                            <input type="checkbox" name="category" value="{{ category.id }}"
+                                   {% if selected_categories and category.id|stringformat:"s" in selected_categories %}checked{% endif %}>
+                            {{ category.name }}
+                        </label><br>
+                    {% endfor %}
+                </div>
                 
                 <br>
                 <button type="submit">ตกลง</button>
@@ -68,29 +77,29 @@
         <div style="flex-grow: 1;">
             <ul>
                 {% for product in products %}
-                <li>
-                    <strong>{{ product.name }}</strong> - ราคา: {{ product.price }} บาท
-                    <br>ขนาด: {{ product.size }}
-                    | หมวดหมู่: 
-                    {% if product.category.all %}
-                        {% for cat in product.category.all %}
-                            {{ cat.name }}{% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        (ไม่มีหมวดหมู่)
-                    {% endif %}
-                    <br>{{ product.description }}
-                    {% if product.image %}
-                        <br><img src="{{ product.image.url }}" width="100">
-                    {% endif %}
-                    <br>จำนวนคงเหลือ: {{ product.quantity }}
-                    <br>
-                    {% if user.is_authenticated %}
-                        <button>เพิ่มใส่ตะกร้า</button>
-                    {% else %}
-                        <a href="{% url 'register' %}"><button>สมัครสมาชิกเพื่อซื้อสินค้า</button></a>
-                    {% endif %}
-                </li>
+                    <li>
+                        <strong>{{ product.name }}</strong> - ราคา: {{ product.price }} บาท
+                        <br>ขนาด: {{ product.size }}
+                        <br>หมวดหมู่: 
+                        {% if product.category.all %}
+                            {% for cat in product.category.all %}
+                                {{ cat.name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            (ไม่มีหมวดหมู่)
+                        {% endif %}
+                        <br>{{ product.description }}
+                        {% if product.image %}
+                            <br><img src="{{ product.image.url }}" width="100">
+                        {% endif %}
+                        <br>จำนวนคงเหลือ: {{ product.quantity }}
+                        <br>
+                        {% if user.is_authenticated %}
+                            <button>เพิ่มใส่ตะกร้า</button>
+                        {% else %}
+                            <a href="{% url 'register' %}"><button>สมัครสมาชิกเพื่อซื้อสินค้า</button></a>
+                        {% endif %}
+                    </li>
                 {% empty %}
                     <p>ไม่พบสินค้า</p>
                 {% endfor %}

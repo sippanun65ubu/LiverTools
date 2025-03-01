@@ -14,7 +14,7 @@ class ProductForm(forms.ModelForm):
         fields = ['name', 'description', 'price', 'quantity', 'size', 'category', 'image', 'new_category']
         # Use a checkbox widget for multiple category selection
         widgets = {
-            'category': forms.CheckboxSelectMultiple(),
+            'category': forms.SelectMultiple(attrs={'style': 'width: 300px;'}),
         }
 
     def __init__(self, *args, **kwargs):
