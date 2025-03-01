@@ -1,17 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>สมัครสมาชิก</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f4f4f4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .register-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .btn-custom {
+            width: 100%;
+        }
+        .text-center {
+            text-align: center;
+        }
+        form p {
+            margin-bottom: 10px;
+        }
+        label {
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <h2>สมัครสมาชิก</h2>
+
+<div class="register-container">
+    <h2 class="text-center">สมัครสมาชิก</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
     
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">สมัครสมาชิก</button>
+        <button type="submit" class="btn btn-success btn-custom">สมัครสมาชิก</button>
     </form>
 
-    <p>มีบัญชีแล้ว? <a href="{% url 'login' %}">เข้าสู่ระบบ</a></p>
+    <p class="text-center mt-3">มีบัญชีแล้ว? <a href="{% url 'login' %}">เข้าสู่ระบบ</a></p>
+</div>
+
 </body>
 </html>

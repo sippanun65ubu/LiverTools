@@ -19,6 +19,24 @@
 <body>
     <h1>รายการสินค้า</h1>
 
+        <!-- 🔹 เช็คว่า Login หรือยัง -->
+        {% if user.is_authenticated %}
+        <p>สวัสดี, {{ user.username }}!  
+            <a href="{% url 'logout' %}">
+                <button>ออกจากระบบ</button>
+            </a>
+            <a href="{% url 'edit_profile' %}">
+                <button>แก้ไขโปรไฟล์</button>
+            </a>
+            <a href="{% url 'add_address' %}">
+                <button>เพิ่มที่อยู่</button>
+            </a>
+        </p>
+    {% else %}
+        <a href="{% url 'login' %}">
+            <button>Login</button>
+        </a>
+    {% endif %}
     <!-- Example of a sidebar layout -->
     <div style="display: flex;">
         <!-- Sidebar -->
@@ -72,7 +90,7 @@
                         <br><img src="{{ product.image.url }}" width="100">
                     {% endif %}
                     <br>จำนวนคงเหลือ: {{ product.quantity }}
-                    
+
                     <br>
 
                     {% if user.is_authenticated %}
