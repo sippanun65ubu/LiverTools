@@ -1,21 +1,35 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vintage Shop</title>
+    <style>
+        /* Optional: style the price inputs side by side */
+        .price-range {
+            display: flex;
+            gap: 10px;
+        }
+        .price-range input {
+            width: 80px;
+            text-align: center;
+        }
+    </style>
 </head>
-
 <body>
     <h1>รายการสินค้า</h1>
 
-    <!-- 🔹 เช็คว่า Login หรือยัง -->
-    {% if user.is_authenticated %}
+        <!-- 🔹 เช็คว่า Login หรือยัง -->
+        {% if user.is_authenticated %}
         <p>สวัสดี, {{ user.username }}!  
             <a href="{% url 'logout' %}">
                 <button>ออกจากระบบ</button>
+            </a>
+            <a href="{% url 'edit_profile' %}">
+                <button>แก้ไขโปรไฟล์</button>
+            </a>
+            <a href="{% url 'add_address' %}">
+                <button>เพิ่มที่อยู่</button>
             </a>
         </p>
     {% else %}
@@ -23,48 +37,75 @@
             <button>Login</button>
         </a>
     {% endif %}
+    <!-- Example of a sidebar layout -->
+    <div style="display: flex;">
+        <!-- Sidebar -->
+        <div style="width: 200px; margin-right: 20px;">
+            <form method="GET" action="{% url 'product_list' %}">
+                
+                <!-- Search box (existing) -->
+                <input type="text" name="q" placeholder="ค้นหาสินค้า..." value="{{ request.GET.q }}">
+                <br><br>
+                
+                <!-- Price Range -->
+                <h3>ช่วงราคา</h3>
+                <div class="price-range">
+                    <input type="text" name="min_price" 
+                           placeholder="B ใส่ราคาต่ำ" 
+                           value="{{ min_price }}">
+                    <span>—</span>
+                    <input type="text" name="max_price" 
+                           placeholder="B ใส่ราคาสูง" 
+                           value="{{ max_price }}">
+                </div>
+                <br>
 
-    <!-- 🔹 เพิ่มช่องค้นหาสินค้า -->
-    <form method="GET" action="{% url 'product_list' %}">
-        <input type="text" name="q" placeholder="ค้นหาสินค้า..." value="{{ request.GET.q }}">
-        <button type="submit">ค้นหา</button>
-    </form>
+                <!-- Category checkboxes (example) -->
+                <h3>ประเภทสินค้า</h3>
+                {% for category in categories %}
+                    <label>
+                        <input type="checkbox" name="category" value="{{ category }}"
+                               {% if selected_categories and category in selected_categories %}checked{% endif %}>
+                        {{ category }}
+                    </label><br>
+                {% endfor %}
+                
+                <br>
+                <button type="submit">ตกลง</button>
+                <a href="{% url 'product_list' %}">ลบทั้งหมด</a>
+            </form>
+        </div>
 
-    <!-- 🔹 ปุ่มเลือกประเภทสินค้า -->
-    <h2>ประเภทสินค้า</h2>
-    <div>
-        <a href="{% url 'product_list' %}"><button>ทั้งหมด</button></a>
-        {% for category in categories %}
-            <a href="{% url 'product_list' %}?category={{ category }}"><button>{{ category }}</button></a>
-        {% endfor %}
+        <!-- Main content: product listing -->
+        <div style="flex-grow: 1;">
+            <ul>
+                {% for product in products %}
+                <li>
+                    <strong>{{ product.name }}</strong> 
+                    - ราคา: {{ product.price }} บาท
+                    <br>ขนาด: {{ product.size }} 
+                    | หมวดหมู่: {{ product.get_category_display }}
+                    <br>{{ product.description }}
+                    {% if product.image %}
+                        <br><img src="{{ product.image.url }}" width="100">
+                    {% endif %}
+                    <br>จำนวนคงเหลือ: {{ product.quantity }}
+
+                    <br>
+
+                    {% if user.is_authenticated %}
+                        <button>เพิ่มใส่ตะกร้า</button>
+                    {% else %}
+                        <a href="{% url 'register' %}">
+                            <button>สมัครสมาชิกเพื่อซื้อสินค้า</button>
+                        </a>
+                    {% endif %}
+                </li>
+                {% empty %}
+                    <p>ไม่พบสินค้า</p>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
-
-    <!-- 🔹 แสดงรายการสินค้า -->
-    <ul>
-        {% for product in products %}
-        <li>
-            <strong>{{ product.name }}</strong> - ราคา: {{ product.price }} บาท
-            <br>ขนาด: {{ product.size }} | หมวดหมู่: {{ product.get_category_display }}
-            <br>{{ product.description }}
-            {% if product.image %}
-            <br><img src="{{ product.image.url }}" width="100">
-            {% endif %}
-            <br>
-            
-            <!-- 🔹 เช็คว่า Login หรือยัง ถ้ายังให้สมัครสมาชิกก่อน -->
-            {% if user.is_authenticated %}
-                <button>เพิ่มใส่ตะกร้า</button>
-            {% else %}
-                <a href="{% url 'register' %}">
-                    <button>สมัครสมาชิกเพื่อซื้อสินค้า</button>
-                </a>
-            {% endif %}
-        </li>
-        {% empty %}
-        <p>ไม่พบสินค้า</p>
-        {% endfor %}
-    </ul>
-
 </body>
-
 </html>
