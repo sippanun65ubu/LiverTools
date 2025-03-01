@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>สมัครสมาชิก</title>
+</head>
+<body>
+    <h2>สมัครสมาชิก</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">สมัครสมาชิก</button>
+    </form>
+
+    <p>มีบัญชีแล้ว? <a href="{% url 'login' %}">เข้าสู่ระบบ</a></p>
+</body>
+</html>

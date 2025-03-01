@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+</head>
+
+<body>
+    <h1>Admin Dashboard</h1>
+
+    <!-- ปุ่มออกจากระบบ -->
+    <a href="{% url 'logout' %}">
+        <button>Logout</button>
+    </a>
+
+    <h2>เพิ่มสินค้า</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">เพิ่มสินค้า</button>
+    </form>
+
+    <h2>จัดการสินค้า</h2>
+    <ul>
+        {% for product in products %}
+        <li>
+            <strong>{{ product.name }}</strong> - ราคา: {{ product.price }} บาท
+            <br>ขนาด: {{ product.size }} | หมวดหมู่: {{ product.get_category_display }}
+            <br>{{ product.description }}
+            {% if product.image %}
+            <br><img src="{{ product.image.url }}" width="100">
+            {% endif %}
+            <br>
+            <a href="{% url 'edit_product' product.id %}">แก้ไข</a> |
+            <a href="{% url 'delete_product' product.id %}" onclick="return confirm('แน่ใจหรือไม่?');">ลบ</a>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+
+</html>
