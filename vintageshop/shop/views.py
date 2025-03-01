@@ -108,7 +108,7 @@ def cart_detail(request):
 def add_to_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     quantity = int(request.POST.get('quantity', 1))
-    cart = Order.objects.get_or_create(user=request.user)
+    cart = get_or_create_cart(request.user)
 
     cart_item, created = CartItem.objects.get_or_create(
         cart=cart,
@@ -119,8 +119,9 @@ def add_to_cart(request, product_id):
     else:
         cart_item.quantity = quantity
     cart_item.save()
-
+    print("add_to_cart called with product_id:", product_id)
     return redirect('product_list')
+
 
 
 @login_required
