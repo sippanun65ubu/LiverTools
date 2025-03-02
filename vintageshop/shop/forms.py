@@ -1,5 +1,6 @@
 from django import forms
 from .models import Product, Category, ChatMessage
+from user.models import Address
 
 class ProductForm(forms.ModelForm):
     # Extra field for creating a new category if needed
@@ -44,3 +45,17 @@ class ChatForm(forms.ModelForm):
         widgets = {
             'message': forms.Textarea(attrs={'rows': 2, 'placeholder': 'พิมพ์ข้อความของคุณ...'})
         }
+
+
+class SelectAddressForm(forms.Form):
+    address = forms.ModelChoiceField(
+        queryset=Address.objects.none(),
+        widget=forms.RadioSelect,
+        empty_label=None,
+        label="เลือกที่อยู่"
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only show addresses belonging to this user
+        self.fields['address'].queryset = user.addresses.all()

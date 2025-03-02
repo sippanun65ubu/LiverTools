@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>เลือกที่อยู่</title>
+</head>
+<body>
+    <h1>เลือกที่อยู่สำหรับการจัดส่ง</h1>
+    <form method="POST">
+        {% csrf_token %}
+        {% if addresses %}
+            <ul>
+            {% for addr in addresses %}
+                <li>
+                    <label>
+                        <input type="radio" name="address_id" value="{{ addr.id }}">
+                        {{ addr.address_line }} ({{ addr.zip_code }})
+                    </label>
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>คุณยังไม่มีที่อยู่บันทึกไว้</p>
+        {% endif %}
+        <button type="submit">ถัดไป</button>
+    </form>
+
+    <p><a href="{% url 'address_list' %}">จัดการที่อยู่</a></p>
+</body>
+</html>

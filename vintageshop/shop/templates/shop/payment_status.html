@@ -1,3 +1,4 @@
+{% load cart_extras %}
 <div class="payment-status-container">
     <h1 class="text-2xl font-semibold text-center">📋 ประวัติการสั่งซื้อ</h1>
 
@@ -7,23 +8,47 @@
             <h2>📄 รายละเอียดการสั่งซื้อ</h2>
             <p><strong>วันที่สั่งซื้อ:</strong> {{ order.created_at }}</p>        
 
+            <!-- ที่อยู่-->
+            {% if order.address_line %}
+            <p><strong>ที่อยู่สำหรับจัดส่ง:</strong> {{ order.address_line }} ({{ order.zip_code }})</p>
+        {% endif %}
+            <!-- ตารางแสดงสินค้าในออเดอร์ -->
             <table class="order-table">
-                <tr>
-                    <th>สินค้า</th>
-                    <th>จำนวน</th>
-                    <th>ราคา</th>
-                </tr>
-                {% for item in order.items.all %}
-                <tr>
-                    <td>{{ item.product.name }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>{{ item.product.price }} บาท</td>
-                </tr>
-                {% endfor %}
+                <thead>
+                    <tr>
+                        <th>สินค้า</th>
+                        <th>จำนวน</th>
+                        <th>ราคา</th>
+                        <th>รวม</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items.all %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <!-- If item stores price in item.price, use that. Otherwise, use item.product.price -->
+                        <td>{{ item.price }} บาท</td>
+                        <!-- Multiply quantity by price (assuming you have a custom multiply filter or do it in the view) -->
+                        <td>{{ item.quantity|multiply:item.price }} บาท</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
 
-            <h3 class="total-price">💰 ราคารวม: <strong>{{ order.total_price }} บาท</strong></h3>
-
+            <!-- หากคุณคำนวณราคารวมใน model หรือ view, ใช้ {{ order.total_price }} -->
+            <!-- หรือคำนวณในเทมเพลตด้วย for-loop, up to your approach. -->
+            <h3 class="total-price">
+                💰 ราคารวม:
+                <strong>
+                    {% if order.total_price %}
+                        {{ order.total_price }} บาท
+                    {% else %}
+                        <!-- Fallback if you haven't implemented total_price on the model -->
+                        กรุณาคำนวณราคารวมใน view หรือ model property
+                    {% endif %}
+                </strong>
+            </h3>
             <h2 class="text-xl font-semibold">💳 สถานะการชำระเงิน</h2>
             {% if order.status == "waiting_confirm" %}
                 <p class="status pending">⏳ รอแอดมินตรวจสอบ</p>

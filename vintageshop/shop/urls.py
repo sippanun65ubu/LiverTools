@@ -20,6 +20,8 @@ urlpatterns = [
     path('admin-orders/', views.admin_order_list, name='admin_order_list'),
     path('admin-orders/confirm/<int:order_id>/', views.admin_confirm_payment, name='admin_confirm_payment'),
     path('admin-orders/reject/<int:order_id>/', views.admin_reject_payment, name='admin_reject_payment'),
+    path('select-address/', views.select_address, name='select_address'),
+    path('checkout/', views.checkout, name='checkout'),
 ]
 
 

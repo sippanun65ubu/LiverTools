@@ -15,6 +15,7 @@
                 <th>ผู้สั่งซื้อ</th>
                 <th>วันที่</th>
                 <th>สถานะการชำระเงิน</th>
+                <th>ที่อยู่สำหรับจัดส่ง</th>
                 <th>หลักฐานการชำระเงิน</th>
                 <th>จัดการ</th>
             </tr>
@@ -26,6 +27,16 @@
                 <td>{{ order.user.username }}</td>
                 <td>{{ order.created_at }}</td>
                 <td>{{ order.status }}</td>
+
+                <td>
+                    {% if order.address_line %}
+                        {{ order.address_line }}<br>
+                        {{ order.zip_code }}
+                    {% else %}
+                        ไม่ได้ระบุ
+                    {% endif %}
+                </td>
+
                 <td>
                     {% if order.payment_slip %}
                         <a href="{{ order.payment_slip.url }}" target="_blank">

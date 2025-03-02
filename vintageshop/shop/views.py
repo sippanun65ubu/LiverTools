@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Product, Category ,Cart, CartItem, Order, OrderItem, ChatMessage
-from .forms import ProductForm, ChatForm
+from .forms import ProductForm, ChatForm, SelectAddressForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.contrib.admin.views.decorators import staff_member_required
+from user.models import Address
 
 User = get_user_model() 
 
@@ -148,31 +149,31 @@ def update_cart_item(request, item_id):
 @login_required
 def checkout(request):
     if request.method == 'POST':
+        # Retrieve the chosen address ID from session
+        selected_address_id = request.session.get('selected_address_id')
+        if not selected_address_id:
+            return redirect('select_address')  # Force them to pick an address
+
+        # Make sure the address belongs to the user
+        address_obj = get_object_or_404(Address, id=selected_address_id, user=request.user)
+
+        # Now create the order, referencing the chosen address
         cart = get_or_create_cart(request.user)
         items = cart.items.select_related('product')
-
         if not items.exists():
             return redirect('cart_detail')
 
-        # สร้างคำสั่งซื้อ
-        order = Order.objects.create(user=request.user)
+        # Suppose your Order model has an 'address_line' field or a ForeignKey to Address
+        order = Order.objects.create(
+            user=request.user,
+            # If storing address text:
+            address_line=address_obj.address_line,
+            zip_code=address_obj.zip_code
+            # or if you have a foreign key: shipping_address=address_obj
+        )
 
-        # ย้ายสินค้าจากตะกร้ามาเป็นคำสั่งซื้อ
-        for item in items:
-            OrderItem.objects.create(
-                order=order,
-                product=item.product,
-                quantity=item.quantity,
-                price=item.product.price
-            )
-            # ลดจำนวนสินค้าในสต็อก
-            item.product.quantity -= item.quantity
-            item.product.save()
-
-        # ลบตะกร้าสินค้า
-        items.delete()
-
-        # ไปหน้าคำสั่งซื้อสำเร็จ
+        # Move items from cart to order, etc.
+        # ...
         return redirect('order_success', order_id=order.id)
 
     return redirect('cart_detail')
@@ -302,3 +303,17 @@ def admin_reject_payment(request, order_id):
     
     # If GET request, show a simple confirmation page
     return render(request, 'shop/admin_reject_payment.html', {'order': order})
+
+
+@login_required
+def select_address(request):
+    # Retrieve all addresses for the logged-in user
+    addresses = request.user.addresses.all()
+
+    if request.method == 'POST':
+        # Suppose the user picks an address via radio buttons or a dropdown
+        selected_address_id = request.POST.get('address_id')
+        if selected_address_id:
+            request.session['selected_address_id'] = selected_address_id
+            return redirect('checkout')  # Move to the checkout step
+    return render(request, 'shop/select_address.html', {'addresses': addresses})

@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from user.models import Address
 
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -35,6 +36,12 @@ class Product(models.Model):
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
+    selected_address = models.ForeignKey(
+        Address,
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='carts')
 
     def __str__(self):
         return f"Cart for {self.user.username if self.user else 'Anonymous'}"
@@ -51,8 +58,11 @@ class CartItem(models.Model):
 class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    payment_slip = models.ImageField(upload_to='payment_slips/', blank=True, null=True)  # อัปโหลดสลิป
-    status = models.CharField(max_length=50, default="waiting_confirm")
+    payment_slip = models.ImageField(upload_to='payment_slips/', blank=True, null=True)
+    status = models.CharField(max_length=50, default="waiting_payment")
+    address_line = models.TextField(blank=True, null=True)
+    zip_code = models.CharField(max_length=10, blank=True, null=True)
+
 
     def __str__(self):
         return f"Order #{self.id} by {self.user.username}"
@@ -77,3 +87,5 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"From {self.sender} to {self.receiver} at {self.timestamp}"
+    
+

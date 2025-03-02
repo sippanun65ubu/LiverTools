@@ -1,6 +1,5 @@
 {% load cart_extras %}
 
-<!-- order_success.html -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -8,9 +7,19 @@
     <title>สั่งซื้อสำเร็จ</title>
 </head>
 <body>
-    <h2>สรุปคำสั่งซื้อ</h2>
+    {% if order.status == "completed" %}
+        <h1>ขอบคุณสำหรับการสั่งซื้อ!</h1>
+    {% else %}
+        <h2>สรุปคำสั่งซื้อ</h2>
+    {% endif %}
     <p>หมายเลขคำสั่งซื้อ: {{ order.id }}</p>
     <p>วันที่: {{ order.created_at }}</p>
+
+    {% if order.address_line %}
+        <h3>ที่อยู่สำหรับจัดส่ง</h3>
+        <p>{{ order.address_line }}</p>
+        <p>รหัสไปรษณีย์: {{ order.zip_code }}</p>
+    {% endif %}
 
     <table>
         <thead>
@@ -36,11 +45,13 @@
     {% if order.payment_slip %}
         <p>คุณได้อัปโหลดสลิปการโอนเงินแล้ว</p>
         <img src="{{ order.payment_slip.url }}" width="300">
-        <!-- ปุ่มเสร็จสิ้น -->
-        <form method="post" action="{% url 'order_complete' order.id %}">
-            {% csrf_token %}
-            <button type="submit">เสร็จสิ้น</button>
-        </form>
+        {% if order.status != "completed" %}
+            <!-- ปุ่มเสร็จสิ้น ให้แสดงเมื่อยังไม่ยืนยัน -->
+            <form method="post" action="{% url 'order_complete' order.id %}">
+                {% csrf_token %}
+                <button type="submit">เสร็จสิ้น</button>
+            </form>
+        {% endif %}
     {% else %}
         <p>กรุณาอัปโหลดสลิปการโอนเงิน</p>
         <form method="post" action="{% url 'upload_payment_slip' order.id %}" enctype="multipart/form-data">

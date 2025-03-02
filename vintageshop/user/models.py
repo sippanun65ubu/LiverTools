@@ -1,8 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-
-from django.contrib.auth.models import AbstractUser
-from django.db import models
+from django.conf import settings
 
 class CustomUser(AbstractUser):
     full_name = models.CharField(max_length=255)  # ชื่อ-นามสกุล
@@ -17,3 +15,17 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email  # ✅ เปลี่ยนให้แสดงอีเมลแทน
+    
+
+class Address(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name="addresses"    
+    )
+    address_line = models.TextField(verbose_name="ที่อยู่")
+    zip_code = models.CharField(max_length=10, verbose_name="รหัสไปรษณีย์")
+    # You can add extra fields if needed (e.g., city, province, etc.)
+
+    def __str__(self):
+        return f"Address #{self.id} for {self.user.email}"

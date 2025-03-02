@@ -1,10 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib import messages
-from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm, EditProfileForm, AddressForm
 from django.contrib.auth.decorators import login_required
-from .forms import EditProfileForm
+from .models import Address
 
 
 def register(request):
@@ -90,3 +90,29 @@ def edit_address(request):
         form = AddressForm(instance=request.user)
 
     return render(request, "user/edit_address.html", {"form": form})
+
+
+@login_required
+def address_list(request):
+    addresses = request.user.addresses.all()  # using related_name="addresses"
+    
+    if request.method == "POST":
+        form = AddressForm(request.POST)
+        if form.is_valid():
+            address_obj = form.save(commit=False)
+            address_obj.user = request.user
+            address_obj.save()
+            return redirect('address_list')
+    else:
+        form = AddressForm()
+        
+    return render(request, 'user/address_list.html', {
+        'addresses': addresses,
+        'form': form,
+    })
+
+@login_required
+def delete_address(request, address_id):
+    address = get_object_or_404(Address, id=address_id, user=request.user)
+    address.delete()
+    return redirect('address_list')

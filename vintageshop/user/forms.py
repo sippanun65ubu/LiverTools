@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import CustomUser
+from .models import CustomUser, Address  
+
+
 class CustomUserCreationForm(UserCreationForm):
     username = forms.CharField(
         label="ชื่อผู้ใช้",
@@ -53,18 +55,20 @@ class EditProfileForm(forms.ModelForm):
         fields = ["full_name", "phone_number", "email"]
 
 class AddressForm(forms.ModelForm):
-    address = forms.CharField(
-        required=True, label="ที่อยู่",
-        widget=forms.Textarea(attrs={"class": "form-control", "placeholder": "กรอกที่อยู่ของคุณ"})
-    )
-    zip_code = forms.CharField(
-        max_length=10, required=True, label="รหัสไปรษณีย์",
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "กรอกรหัสไปรษณีย์"})
-    )
-
     class Meta:
-        model = CustomUser
-        fields = ["address", "zip_code"]
+        model = Address
+        fields = ['address_line', 'zip_code']
+        widgets = {
+            'address_line': forms.Textarea(attrs={
+                "class": "form-control", 
+                "placeholder": "กรอกที่อยู่ของคุณ",
+                "rows": 3,
+            }),
+            'zip_code': forms.TextInput(attrs={
+                "class": "form-control", 
+                "placeholder": "กรอกรหัสไปรษณีย์"
+            }),
+        }
 
 class EmailAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(required=True, label="อีเมล",widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "กรอกอีเมล"}))
