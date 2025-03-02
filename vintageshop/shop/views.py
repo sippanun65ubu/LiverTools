@@ -286,7 +286,14 @@ def admin_chat(request):
 def admin_order_list(request):
     """Show all orders with payment details for admin review."""
     orders = Order.objects.all().order_by('-created_at')
+
+    # ✅ เพิ่มการคำนวณราคารวมของแต่ละออเดอร์
+    for order in orders:
+        total_price = sum(item.quantity * item.price for item in order.items.all())
+        order.total_price = total_price  # เพิ่ม attribute ให้ order (แต่ไม่บันทึกใน DB)
+
     return render(request, 'shop/admin_order_list.html', {'orders': orders})
+
 
 
 @login_required

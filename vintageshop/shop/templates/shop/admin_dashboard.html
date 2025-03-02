@@ -3,20 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Dashboard</title>
-    
+
     <!-- jQuery (required by Select2) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
-            integrity="sha256-/xUj+p6DV8E1AK7AN08z2mDl3/KnxZ6eGhHcyF5n8Mc="
-            crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <!-- Select2 CSS and JS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <style>
-        /* Optional: Adjust the width for Select2 to fit your layout */
+        /* ปรับปรุง UI */
         .select2-container {
             width: 100% !important;
+        }
+        .hidden {
+            display: none;
+        }
+        .no-results {
+            display: none;
+            color: red;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -24,30 +32,18 @@
     <h1>Admin Dashboard</h1>
 
     <a href="{% url 'logout' %}"><button>Logout</button></a>
-
     <a href="{% url 'admin_chat' %}"><button>จัดการแชท</button></a>
-
     <a href="{% url 'admin_order_list' %}"><button>จัดการคำสั่งซื้อ</button></a>
 
     <h2>เพิ่มสินค้า</h2>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        
-        <!-- 
-            If you render the entire form with as_p, the category field 
-            will be included automatically. We'll attach Select2 via the ID.
-        -->
         {{ form.as_p }}
-        
         <button type="submit">เพิ่มสินค้า</button>
     </form>
 
-    <!-- Initialize Select2 after the form is rendered -->
     <script>
         $(document).ready(function() {
-            // By default, Django will give your category field an ID of "id_category"
-            // (unless you manually changed it in the form).
-            // Attach Select2 to that element:
             $('#id_category').select2({
                 placeholder: 'Select categories',
                 allowClear: true
@@ -56,10 +52,17 @@
     </script>
 
     <h2>จัดการสินค้า</h2>
-    <ul>
+
+    <!-- ✅ ช่องค้นหาสินค้า -->
+    <input type="text" id="searchBox" placeholder="ค้นหาสินค้า..." style="width: 100%; padding: 10px; margin-bottom: 10px;">
+
+    <!-- ✅ แจ้งเตือนเมื่อไม่พบสินค้า -->
+    <p id="noResults" class="no-results">ไม่พบสินค้าที่ตรงกับคำค้นหา</p>
+
+    <ul id="productList">
         {% for product in products %}
-            <li>
-                <strong>{{ product.name }}</strong> - ราคา: {{ product.price }} บาท
+            <li class="product-item">
+                <strong class="product-name">{{ product.name }}</strong> - ราคา: {{ product.price }} บาท
                 <br>ขนาด: {{ product.size }}
                 <br>หมวดหมู่:
                 {% if product.category.all %}
@@ -79,5 +82,31 @@
             </li>
         {% endfor %}
     </ul>
+
+    <script>
+        $(document).ready(function() {
+            $("#searchBox").on("keyup", function() {
+                var searchText = $(this).val().toLowerCase().trim();
+                var hasResults = false;
+
+                $(".product-item").each(function() {
+                    var itemName = $(this).find(".product-name").text().toLowerCase().trim();
+                    if (itemName.includes(searchText)) {
+                        $(this).show();
+                        hasResults = true;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                // ✅ แสดงข้อความ "ไม่พบสินค้า" ถ้าไม่มีผลลัพธ์
+                if (hasResults) {
+                    $("#noResults").hide();
+                } else {
+                    $("#noResults").show();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
