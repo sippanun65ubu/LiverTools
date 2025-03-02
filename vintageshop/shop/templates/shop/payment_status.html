@@ -25,7 +25,7 @@
             <h3 class="total-price">💰 ราคารวม: <strong>{{ order.total_price }} บาท</strong></h3>
 
             <h2 class="text-xl font-semibold">💳 สถานะการชำระเงิน</h2>
-            {% if order.status == "waiting_payment" %}
+            {% if order.status == "waiting_confirm" %}
                 <p class="status pending">⏳ รอแอดมินตรวจสอบ</p>
             {% elif order.status == "approved" %}
                 <p class="status success">✅ อนุมัติแล้ว</p>

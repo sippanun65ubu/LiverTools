@@ -52,6 +52,7 @@ class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     payment_slip = models.ImageField(upload_to='payment_slips/', blank=True, null=True)  # อัปโหลดสลิป
+    status = models.CharField(max_length=50, default="waiting_confirm")
 
     def __str__(self):
         return f"Order #{self.id} by {self.user.username}"

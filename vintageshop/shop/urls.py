@@ -17,6 +17,9 @@ urlpatterns = [
     path('payment-status/', views.payment_status, name='payment_status'),
     path('chat/', views.user_chat, name='user_chat'),
     path('admin-chat/', views.admin_chat, name='admin_chat'), 
+    path('admin-orders/', views.admin_order_list, name='admin_order_list'),
+    path('admin-orders/confirm/<int:order_id>/', views.admin_confirm_payment, name='admin_confirm_payment'),
+    path('admin-orders/reject/<int:order_id>/', views.admin_reject_payment, name='admin_reject_payment'),
 ]
 
 

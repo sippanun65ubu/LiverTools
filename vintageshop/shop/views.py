@@ -3,6 +3,7 @@ from .models import Product, Category ,Cart, CartItem, Order, OrderItem, ChatMes
 from .forms import ProductForm, ChatForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
+from django.contrib.admin.views.decorators import staff_member_required
 
 User = get_user_model() 
 
@@ -205,12 +206,10 @@ def get_or_create_cart(user):
 
 def order_complete(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
-    
-    # อัปเดตสถานะคำสั่งซื้อให้เป็น 'เสร็จสิ้น'
-    order.status = "completed"
+    # Instead of "completed":
+    order.status = "waiting_confirm"
     order.save()
-
-    return redirect('product_list')  # กลับไปยังหน้าแรกหลังจากทำรายการเสร็จ
+    return redirect('product_list')
 
 @login_required
 def payment_status(request):
@@ -269,3 +268,37 @@ def admin_chat(request):
                 return redirect(f"{request.path}?user={selected_user.id}")  # ✅ Redirect หลังส่ง
 
     return render(request, 'shop/admin_chat.html', {'users': users, 'messages': messages, 'selected_user': selected_user})
+
+@login_required
+@staff_member_required
+def admin_order_list(request):
+    """Show all orders with payment details for admin review."""
+    orders = Order.objects.all().order_by('-created_at')
+    return render(request, 'shop/admin_order_list.html', {'orders': orders})
+
+
+@login_required
+@staff_member_required
+def admin_confirm_payment(request, order_id):
+    """Admin view to confirm (approve) a user's payment."""
+    order = get_object_or_404(Order, id=order_id)
+    if request.method == "POST":
+        # For example, set status to approved (or completed)
+        order.status = "approved"
+        order.save()
+        return redirect('admin_order_list')
+    return render(request, 'shop/admin_confirm_payment.html', {'order': order})
+
+@login_required
+@staff_member_required
+def admin_reject_payment(request, order_id):
+    """Admin view to reject a user's payment."""
+    order = get_object_or_404(Order, id=order_id)
+    if request.method == "POST":
+        # e.g., set status to rejected
+        order.status = "rejected"
+        order.save()
+        return redirect('admin_order_list')
+    
+    # If GET request, show a simple confirmation page
+    return render(request, 'shop/admin_reject_payment.html', {'order': order})

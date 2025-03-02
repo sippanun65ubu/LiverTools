@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>ยืนยันการชำระเงิน</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="container mt-4">
+    <h1>ยืนยันการชำระเงินสำหรับ Order #{{ order.id }}</h1>
+    <p><strong>วันที่สั่งซื้อ:</strong> {{ order.created_at }}</p>
+    <p><strong>สถานะปัจจุบัน:</strong> {{ order.status }}</p>
+
+    {% if order.payment_slip %}
+        <p><strong>สลิปการโอนเงิน:</strong></p>
+        <img src="{{ order.payment_slip.url }}" alt="Payment Slip" width="300">
+    {% else %}
+        <p>ไม่มีหลักฐานการชำระเงิน</p>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">อนุมัติการชำระเงิน</button>
+    </form>
+
+    <a href="{% url 'admin_order_list' %}" class="btn btn-secondary mt-3">กลับไปยังรายการคำสั่งซื้อ</a>
+</body>
+</html>
