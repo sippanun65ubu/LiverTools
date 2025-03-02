@@ -42,6 +42,7 @@
             <a href="{% url 'add_address' %}"><button>เพิ่มที่อยู่</button></a>
             <a href="{% url 'payment_status' %}"><button>📋 ตรวจสอบสถานะคำสั่งซื้อ</button></a>
         </p>
+        <a href="{% url 'user_chat' %}"><button>Chat กับแอดมิน</button></a> <!-- ปุ่มแชท -->
     {% else %}
         <a href="{% url 'login' %}"><button>Login</button></a>
     {% endif %}

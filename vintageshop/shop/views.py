@@ -1,7 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Product, Category ,Cart, CartItem, Order, OrderItem
-from .forms import ProductForm
+from .models import Product, Category ,Cart, CartItem, Order, OrderItem, ChatMessage
+from .forms import ProductForm, ChatForm
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
+
+User = get_user_model() 
 
 def product_list(request):
     query = request.GET.get('q', '')
@@ -213,3 +216,56 @@ def order_complete(request, order_id):
 def payment_status(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')  # แสดงคำสั่งซื้อล่าสุดก่อน
     return render(request, 'shop/payment_status.html', {'orders': orders})
+
+@login_required
+def user_chat(request):
+    admin_user = User.objects.filter(is_superuser=True).first()
+    messages = ChatMessage.objects.filter(
+        sender=request.user, receiver=admin_user
+    ) | ChatMessage.objects.filter(sender=admin_user, receiver=request.user)
+    
+    messages = messages.order_by('timestamp')
+
+    if request.method == "POST":
+        form = ChatForm(request.POST)
+        if form.is_valid():
+            chat_message = form.save(commit=False)
+            chat_message.sender = request.user
+            chat_message.receiver = admin_user
+            chat_message.save()
+            return redirect('user_chat')
+
+    else:
+        form = ChatForm()
+
+    return render(request, 'shop/user_chat.html', {'messages': messages, 'form': form})
+
+@login_required
+def admin_chat(request):
+    if not request.user.is_superuser:
+        return redirect('product_list')  # ป้องกัน user ธรรมดาเข้าถึง
+
+    users = User.objects.filter(is_superuser=False)
+    selected_user_id = request.GET.get('user')
+    selected_user = None
+    messages = ChatMessage.objects.none()
+
+    if selected_user_id:
+        selected_user = get_object_or_404(User, id=selected_user_id)
+        messages = ChatMessage.objects.filter(
+            sender=selected_user, receiver=request.user
+        ) | ChatMessage.objects.filter(sender=request.user, receiver=selected_user)
+        messages = messages.order_by('timestamp')
+
+        # ✅ ตรวจสอบว่ามีการส่งข้อความหรือไม่
+        if request.method == "POST":
+            message_text = request.POST.get('message')
+            if message_text:  # ตรวจสอบว่าข้อความไม่ว่างเปล่า
+                ChatMessage.objects.create(
+                    sender=request.user,  # ✅ แอดมินเป็นคนส่ง
+                    receiver=selected_user,  # ✅ ส่งไปยัง user ที่เลือก
+                    message=message_text
+                )
+                return redirect(f"{request.path}?user={selected_user.id}")  # ✅ Redirect หลังส่ง
+
+    return render(request, 'shop/admin_chat.html', {'users': users, 'messages': messages, 'selected_user': selected_user})

@@ -15,6 +15,8 @@ urlpatterns = [
     path('upload-payment-slip/<int:order_id>/', views.upload_payment_slip, name='upload_payment_slip'),
     path('order-complete/<int:order_id>/', views.order_complete, name='order_complete'),
     path('payment-status/', views.payment_status, name='payment_status'),
+    path('chat/', views.user_chat, name='user_chat'),
+    path('admin-chat/', views.admin_chat, name='admin_chat'), 
 ]
 
 

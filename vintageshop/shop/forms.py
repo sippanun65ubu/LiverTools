@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product, Category
+from .models import Product, Category, ChatMessage
 
 class ProductForm(forms.ModelForm):
     # Extra field for creating a new category if needed
@@ -36,3 +36,11 @@ class ProductForm(forms.ModelForm):
             # Add the new category to the product's many-to-many relationship
             instance.category.add(category_obj)
         return instance
+
+class ChatForm(forms.ModelForm):
+    class Meta:
+        model = ChatMessage
+        fields = ['message']
+        widgets = {
+            'message': forms.Textarea(attrs={'rows': 2, 'placeholder': 'พิมพ์ข้อความของคุณ...'})
+        }

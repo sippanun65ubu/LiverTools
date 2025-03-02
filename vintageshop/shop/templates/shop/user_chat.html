@@ -1,0 +1,24 @@
+@@ -0,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat กับแอดมิน</title>
+</head>
+<body>
+    <h2>Chat กับแอดมิน</h2>
+    <div style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
+        {% for message in messages %}
+            <p><strong>{{ message.sender.username }}:</strong> {{ message.message }}</p>
+        {% endfor %}
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">ส่งข้อความ</button>
+    </form>
+
+    <a href="{% url 'product_list' %}">กลับไปหน้าหลัก</a>
+</body>
+</html>
