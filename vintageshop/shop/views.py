@@ -149,34 +149,45 @@ def update_cart_item(request, item_id):
 @login_required
 def checkout(request):
     if request.method == 'POST':
-        # Retrieve the chosen address ID from session
+        # ดึงที่อยู่ที่ผู้ใช้เลือกจาก session
         selected_address_id = request.session.get('selected_address_id')
         if not selected_address_id:
-            return redirect('select_address')  # Force them to pick an address
+            return redirect('select_address')  # บังคับให้เลือกที่อยู่ก่อน Checkout
 
-        # Make sure the address belongs to the user
+        # ตรวจสอบว่า Address นี้เป็นของผู้ใช้จริงหรือไม่
         address_obj = get_object_or_404(Address, id=selected_address_id, user=request.user)
 
-        # Now create the order, referencing the chosen address
+        # ดึงข้อมูลตะกร้าของผู้ใช้
         cart = get_or_create_cart(request.user)
         items = cart.items.select_related('product')
+        
         if not items.exists():
-            return redirect('cart_detail')
+            return redirect('cart_detail')  # ป้องกันการ Checkout ตะกร้าว่าง
 
-        # Suppose your Order model has an 'address_line' field or a ForeignKey to Address
+        # ✅ สร้างคำสั่งซื้อใหม่
         order = Order.objects.create(
             user=request.user,
-            # If storing address text:
-            address_line=address_obj.address_line,
+            address_line=address_obj.address_line,  # ✅ ใช้ field ที่ถูกต้อง
             zip_code=address_obj.zip_code
-            # or if you have a foreign key: shipping_address=address_obj
         )
 
-        # Move items from cart to order, etc.
-        # ...
+        # ✅ ย้ายสินค้าแต่ละชิ้นจาก Cart -> Order
+        for item in items:
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                price=item.product.price
+            )
+        
+        # ✅ ลบสินค้าทั้งหมดออกจากตะกร้าหลัง Checkout
+        cart.items.all().delete()
+
         return redirect('order_success', order_id=order.id)
 
     return redirect('cart_detail')
+
+
 
 @login_required
 def upload_payment_slip(request, order_id):
