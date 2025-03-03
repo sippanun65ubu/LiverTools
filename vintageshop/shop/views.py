@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Product, Category ,Cart, CartItem, Order, OrderItem, ChatMessage
-from .forms import ProductForm, ChatForm, SelectAddressForm
+from .forms import ProductForm, ChatForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.contrib.admin.views.decorators import staff_member_required
 from user.models import Address
 from django.contrib import messages
+from django.db import models 
 
 User = get_user_model() 
 
@@ -280,6 +281,12 @@ def order_complete(request, order_id):
 @login_required
 def payment_status(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')  # แสดงคำสั่งซื้อล่าสุดก่อน
+    
+    
+    for order in orders:
+        total_price = sum(item.quantity * item.price for item in order.items.all())
+        order.total_price = total_price  # ✅ เพิ่ม attribute ให้ order (แต่ไม่บันทึกใน DB)
+
     return render(request, 'shop/payment_status.html', {'orders': orders})
 
 @login_required
@@ -338,15 +345,27 @@ def admin_chat(request):
 @login_required
 @staff_member_required
 def admin_order_list(request):
-    """Show all orders with payment details for admin review."""
-    orders = Order.objects.all().order_by('-created_at')
+    """แสดงรายการคำสั่งซื้อ พร้อมเรียงลำดับให้คำสั่งซื้อที่ยังไม่อนุมัติอยู่บนสุด"""
+    
+    orders = Order.objects.all().order_by(
+        # ✅ นำ waiting_confirm ไว้บนสุด
+        models.Case(
+            models.When(status="waiting_confirm", then=0),
+            models.When(status="approved", then=1),
+            models.When(status="rejected", then=2),
+            default=3, output_field=models.IntegerField(),
+        ),
+        # ✅ จากนั้นเรียงตามวันที่ (ล่าสุดขึ้นก่อน)
+        "-created_at"
+    )
 
-    # ✅ เพิ่มการคำนวณราคารวมของแต่ละออเดอร์
+    # ✅ คำนวณราคารวมของแต่ละออเดอร์
     for order in orders:
         total_price = sum(item.quantity * item.price for item in order.items.all())
-        order.total_price = total_price  # เพิ่ม attribute ให้ order (แต่ไม่บันทึกใน DB)
+        order.total_price = total_price
 
     return render(request, 'shop/admin_order_list.html', {'orders': orders})
+
 
 
 
@@ -389,50 +408,3 @@ def select_address(request):
             request.session['selected_address_id'] = selected_address_id
             return redirect('checkout')  # Move to the checkout step
     return render(request, 'shop/select_address.html', {'addresses': addresses})
-
-from django.shortcuts import render
-from django.db.models import Sum, Count
-from django.utils import timezone
-from datetime import timedelta
-from django.db.models.functions import TruncDate
-from .models import Order
-
-def admin_sales_report(request):
-    today = timezone.now().date()
-
-    # ดึงคำสั่งซื้อที่สร้างวันนี้
-    orders = Order.objects.filter(created_at__date=today)
-
-    # คำนวณจำนวนออเดอร์ทั้งหมดของวันนี้
-    daily_sales = orders.count()
-
-    # คำนวณจำนวนสินค้าทั้งหมดที่ขายวันนี้
-    total_items_sold = sum(order.items.aggregate(Sum('quantity'))['quantity__sum'] or 0 for order in orders)
-
-    # คำนวณยอดรวมของออเดอร์แต่ละรายการ
-    for order in orders:
-        order.total_price = sum(item.quantity * item.price for item in order.orderitem_set.all())
-
-    # ✅ คำนวณแนวโน้มยอดขายย้อนหลัง 7 วัน
-    sales_trend = (
-        Order.objects.filter(created_at__gte=today - timedelta(days=6))
-        .annotate(date_created=TruncDate('created_at'))
-        .values('date_created')
-        .annotate(total_orders=Count('id'))
-        .order_by('date_created')
-    )
-
-    trend_labels = [entry["date_created"].strftime("%Y-%m-%d") for entry in sales_trend]
-    trend_data = [entry["total_orders"] for entry in sales_trend]
-
-    context = {
-        "orders": orders,
-        "daily_sales": daily_sales,
-        "total_items_sold": total_items_sold,
-        "trend_labels": trend_labels,
-        "trend_data": trend_data,
-    }
-
-    return render(request, "shop/admin_sales_report.html", context)
-
-

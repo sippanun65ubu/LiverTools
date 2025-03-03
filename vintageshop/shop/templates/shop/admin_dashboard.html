@@ -1,93 +1,158 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
 
-    <!-- jQuery (required by Select2) -->
+    <!-- Bootstrap & jQuery -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <!-- Select2 CSS and JS -->
+    <!-- Select2 (for Category selection) -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <style>
-        /* ปรับปรุง UI */
-        .select2-container {
-            width: 100% !important;
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .dashboard-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .btn-group a {
+            margin-right: 10px;
         }
         .hidden {
             display: none;
         }
-        .no-results {
-            display: none;
-            color: red;
-            font-weight: bold;
-            text-align: center;
-            margin-top: 10px;
+        .product-form {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f9f9f9;
         }
     </style>
 </head>
 <body>
-    <h1>Admin Dashboard</h1>
-
-    <a href="{% url 'logout' %}"><button>Logout</button></a>
-    <a href="{% url 'admin_chat' %}"><button>จัดการแชท</button></a>
-    <a href="{% url 'admin_order_list' %}"><button>จัดการคำสั่งซื้อ</button></a>
-    <a href="{% url 'admin_sales_report' %}"><button style="padding: 10px 20px; font-size: 16px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;"> 📊 ดูรายงานยอดขาย
-        </button>
-    </a>
+    <div class="container mt-4">
+        <div class="text-center p-3 rounded shadow-sm bg-white" style="max-width: 600px; margin: auto;">
+            <h2 class="mb-3">
+                <img src="https://cdn-icons-png.flaticon.com/512/3898/3898108.png" width="30">
+                <strong>Admin Dashboard</strong>
+            </h2>
     
+            <!-- ✅ ปุ่มเมนูหลัก ขนาดเล็กลง & จัดเรียงให้ดูดี -->
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <a href="{% url 'admin_order_list' %}" class="btn btn-warning btn-sm px-3">
+                    📦 จัดการคำสั่งซื้อ
+                </a>
+                <a href="{% url 'admin_chat' %}" class="btn btn-primary btn-sm px-3">
+                    💬 แชทกับลูกค้า
+                </a>
+                <a href="{% url 'logout' %}" class="btn btn-danger btn-sm px-3">
+                    🚪 Logout
+                </a>
+                <button id="toggleFormBtn" class="btn btn-success btn-sm px-3">
+                    ➕ เพิ่มสินค้า
+                </button>
+            </div>
+        </div>
 
+        <!-- ✅ ฟอร์มเพิ่มสินค้า (ซ่อนอยู่ตอนแรก) -->
+        <div id="productFormContainer" class="hidden mt-3">
+            <h2 class="mt-4">🛍 เพิ่มสินค้า</h2>
+            <form method="post" enctype="multipart/form-data" class="product-form">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">📌 บันทึกสินค้า</button>
+            </form>
+        </div>
 
-    <h2>เพิ่มสินค้า</h2>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">เพิ่มสินค้า</button>
-    </form>
+        <script>
+            $(document).ready(function() {
+                // ✅ ซ่อน/แสดงฟอร์มเมื่อกดปุ่ม
+                $("#toggleFormBtn").click(function() {
+                    $("#productFormContainer").toggleClass("hidden");
+                });
 
-    <script>
-        $(document).ready(function() {
-            $('#id_category').select2({
-                placeholder: 'Select categories',
-                allowClear: true
+                // ✅ ใช้ Select2 สำหรับเลือกหมวดหมู่สินค้า
+                $('#id_category').select2({
+                    placeholder: 'เลือกหมวดหมู่สินค้า',
+                    allowClear: true
+                });
             });
-        });
-    </script>
+        </script>
 
-    <h2>จัดการสินค้า</h2>
+<div class="container mt-4">
+    <h2 class="mb-3">📋 จัดการสินค้า</h2>
 
-    <!-- ✅ ช่องค้นหาสินค้า -->
-    <input type="text" id="searchBox" placeholder="ค้นหาสินค้า..." style="width: 100%; padding: 10px; margin-bottom: 10px;">
+    <!-- ✅ ค้นหาสินค้า -->
+    <input type="text" id="searchBox" class="form-control mb-3" placeholder="🔍 ค้นหาสินค้า...">
 
     <!-- ✅ แจ้งเตือนเมื่อไม่พบสินค้า -->
-    <p id="noResults" class="no-results">ไม่พบสินค้าที่ตรงกับคำค้นหา</p>
+    <p id="noResults" class="text-danger text-center" style="display: none;">❌ ไม่พบสินค้าที่ตรงกับคำค้นหา</p>
 
-    <ul id="productList">
+    <!-- ✅ ใช้ Bootstrap Grid System แสดงสินค้า -->
+    <div class="row" id="productGrid">
         {% for product in products %}
-            <li class="product-item">
-                <strong class="product-name">{{ product.name }}</strong> - ราคา: {{ product.price }} บาท
-                <br>ขนาด: {{ product.size }}
-                <br>หมวดหมู่:
-                {% if product.category.all %}
-                    {% for cat in product.category.all %}
-                        {{ cat.name }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                {% else %}
-                    (ไม่มีหมวดหมู่)
-                {% endif %}
-                <br>{{ product.description }}
+        <div class="col-md-4 mb-4 product-item">
+            <div class="card h-100 shadow-sm">
+                <!-- ✅ รูปภาพสินค้า -->
                 {% if product.image %}
-                    <br><img src="{{ product.image.url }}" width="100">
+                    <img src="{{ product.image.url }}" class="card-img-top img-fluid" style="max-height: 200px; object-fit: cover;">
+                {% else %}
+                    <img src="https://via.placeholder.com/200" class="card-img-top img-fluid">
                 {% endif %}
-                <br>
-                <a href="{% url 'edit_product' product.id %}">แก้ไข</a> |
-                <a href="{% url 'delete_product' product.id %}" onclick="return confirm('แน่ใจหรือไม่?');">ลบ</a>
-            </li>
-        {% endfor %}
-    </ul>
 
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ product.name }}</h5>
+                    <p class="card-text">
+                        💰 <strong>{{ product.price }} บาท</strong> | 📏 ขนาด: {{ product.size }}
+                    </p>
+
+                    <p class="card-text">
+                        📂 หมวดหมู่: 
+                        {% if product.category.all %}
+                            {% for cat in product.category.all %}
+                                {{ cat.name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            (ไม่มีหมวดหมู่)
+                        {% endif %}
+                    </p>
+
+                    <!-- ✅ แสดงจำนวนสินค้าคงเหลือ -->
+                    <p>
+                        📦 คงเหลือ: 
+                        {% if product.quantity > 5 %}
+                            <span class="text-success">{{ product.quantity }} ชิ้น</span>
+                        {% elif product.quantity > 0 %}
+                            <span class="text-warning">เหลือ {{ product.quantity }} ชิ้น (ใกล้หมด!)</span>
+                        {% else %}
+                            <span class="text-danger">❌ หมดสต็อก</span>
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="card-footer text-center">
+                    <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-info">✏️ แก้ไข</a>
+                    <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-danger" onclick="return confirm('แน่ใจหรือไม่?');">🗑 ลบ</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+    <!-- ✅ ค้นหาสินค้าแบบ real-time -->
     <script>
         $(document).ready(function() {
             $("#searchBox").on("keyup", function() {

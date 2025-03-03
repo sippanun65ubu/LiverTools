@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "user",  # แอปสำหรับจัดการบัญชี
     "shop",  # แอปสำหรับจัดการสินค้า
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
