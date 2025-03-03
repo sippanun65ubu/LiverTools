@@ -291,33 +291,35 @@ def payment_status(request):
 
 @login_required
 def user_chat(request):
-    admin_user = User.objects.filter(is_superuser=True).first()
+    admin_user = User.objects.filter(is_superuser=True).first()  # ✅ ดึงแอดมินคนแรก
+    if not admin_user:
+        return render(request, 'shop/user_chat.html', {'error': "ไม่พบแอดมิน"})
+
     messages = ChatMessage.objects.filter(
         sender=request.user, receiver=admin_user
     ) | ChatMessage.objects.filter(sender=admin_user, receiver=request.user)
-    
-    messages = messages.order_by('timestamp')
+
+    messages = messages.order_by('timestamp')  # ✅ เรียงลำดับข้อความเก่า → ใหม่
 
     if request.method == "POST":
-        form = ChatForm(request.POST)
-        if form.is_valid():
-            chat_message = form.save(commit=False)
-            chat_message.sender = request.user
-            chat_message.receiver = admin_user
-            chat_message.save()
-            return redirect('user_chat')
+        message_text = request.POST.get('message')
+        if message_text:  # ✅ ตรวจสอบว่าข้อความไม่ว่างเปล่า
+            ChatMessage.objects.create(
+                sender=request.user,  
+                receiver=admin_user,  # ✅ สมาชิกส่งไปยังแอดมิน
+                message=message_text
+            )
+            return redirect('user_chat')  # ✅ รีเฟรชหน้าเพื่อแสดงข้อความล่าสุด
 
-    else:
-        form = ChatForm()
+    return render(request, 'shop/user_chat.html', {'messages': messages})
 
-    return render(request, 'shop/user_chat.html', {'messages': messages, 'form': form})
 
 @login_required
 def admin_chat(request):
     if not request.user.is_superuser:
-        return redirect('product_list')  # ป้องกัน user ธรรมดาเข้าถึง
+        return redirect('product_list')  # ✅ ป้องกัน user ธรรมดาเข้าถึง
 
-    users = User.objects.filter(is_superuser=False)
+    users = User.objects.filter(is_superuser=False)  # ✅ ดึงเฉพาะสมาชิกที่ไม่ใช่แอดมิน
     selected_user_id = request.GET.get('user')
     selected_user = None
     messages = ChatMessage.objects.none()
@@ -327,20 +329,25 @@ def admin_chat(request):
         messages = ChatMessage.objects.filter(
             sender=selected_user, receiver=request.user
         ) | ChatMessage.objects.filter(sender=request.user, receiver=selected_user)
+
         messages = messages.order_by('timestamp')
 
-        # ✅ ตรวจสอบว่ามีการส่งข้อความหรือไม่
         if request.method == "POST":
             message_text = request.POST.get('message')
-            if message_text:  # ตรวจสอบว่าข้อความไม่ว่างเปล่า
+            if message_text:
                 ChatMessage.objects.create(
-                    sender=request.user,  # ✅ แอดมินเป็นคนส่ง
-                    receiver=selected_user,  # ✅ ส่งไปยัง user ที่เลือก
+                    sender=request.user,  
+                    receiver=selected_user,  # ✅ แอดมินส่งไปยังสมาชิก
                     message=message_text
                 )
-                return redirect(f"{request.path}?user={selected_user.id}")  # ✅ Redirect หลังส่ง
+                return redirect(f"{request.path}?user={selected_user.id}")  # ✅ รีเฟรชหน้าเพื่อแสดงข้อความใหม่
 
-    return render(request, 'shop/admin_chat.html', {'users': users, 'messages': messages, 'selected_user': selected_user})
+    return render(request, 'shop/admin_chat.html', {
+        'users': users,
+        'messages': messages,
+        'selected_user': selected_user
+    })
+
 
 @login_required
 @staff_member_required
