@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <title>💬 แชทกับแอดมิน</title>
@@ -13,6 +14,7 @@
             justify-content: center;
             height: 100vh;
         }
+
         .chat-container {
             background: white;
             padding: 30px;
@@ -23,6 +25,7 @@
             display: flex;
             flex-direction: column;
         }
+
         .chat-header {
             background: #007bff;
             color: white;
@@ -32,6 +35,7 @@
             text-align: center;
             border-radius: 10px 10px 0 0;
         }
+
         .chat-box {
             height: 350px;
             overflow-y: auto;
@@ -42,6 +46,7 @@
             display: flex;
             flex-direction: column;
         }
+
         .chat-bubble {
             max-width: 75%;
             padding: 10px 15px;
@@ -49,28 +54,33 @@
             margin-bottom: 10px;
             word-wrap: break-word;
         }
+
         .user-message {
             background: #007bff;
             color: white;
             align-self: flex-end;
             margin-left: auto;
         }
+
         .admin-message {
             background: #ddd;
             color: black;
             align-self: flex-start;
             margin-right: auto;
         }
+
         .chat-input {
             display: flex;
             gap: 10px;
         }
+
         .chat-input input {
             flex: 1;
             padding: 10px;
             border-radius: 20px;
             border: 1px solid #ccc;
         }
+
         .chat-input button {
             background: #007bff;
             color: white;
@@ -79,9 +89,11 @@
             border-radius: 20px;
             cursor: pointer;
         }
+
         .chat-input button:hover {
             background: #0056b3;
         }
+
         .btn-back {
             width: 100%;
             margin-top: 10px;
@@ -90,6 +102,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <!-- ✅ กล่องแชท -->
@@ -100,16 +113,18 @@
 
         <div class="chat-box" id="chatBox">
             {% for message in messages %}
-                <div class="d-flex {% if message.sender == user %} justify-content-end {% else %} justify-content-start {% endif %}">
-                    <div class="chat-bubble {% if message.sender == user %} user-message {% else %} admin-message {% endif %}">
-                        <strong>{{ message.sender.username }}:</strong> {{ message.message }}
-                    </div>
+            <div
+                class="d-flex {% if message.sender == request.user %} justify-content-end {% else %} justify-content-start {% endif %}">
+                <div
+                    class="chat-bubble {% if message.sender == user %} user-message {% else %} admin-message {% endif %}">
+                    <strong>{{ message.sender.username }}:</strong> {{ message.message }}
                 </div>
+            </div>
             {% endfor %}
         </div>
 
         <!-- ✅ ช่องกรอกข้อความ -->
-        <form id="chatForm" class="chat-input">
+        <form id="chatForm" class="chat-input" method="post" action="{% url 'user_chat' %}">
             {% csrf_token %}
             <input type="text" name="message" id="chatInput" placeholder="พิมพ์ข้อความ..." required>
             <button type="submit">📩 ส่ง</button>
@@ -126,54 +141,29 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             scrollToBottom();
         });
 
         // ✅ Auto Refresh Messages (Every 5 seconds)
         function fetchMessages() {
             fetch("{% url 'user_chat' %}")
-            .then(response => response.text())
-            .then(data => {
-                let parser = new DOMParser();
-                let newDocument = parser.parseFromString(data, "text/html");
-                let newChatBox = newDocument.getElementById("chatBox").innerHTML;
-                document.getElementById("chatBox").innerHTML = newChatBox;
-                scrollToBottom();
-            })
-            .catch(error => console.log("Error fetching messages:", error));
+                .then(response => response.text())
+                .then(data => {
+                    let parser = new DOMParser();
+                    let newDocument = parser.parseFromString(data, "text/html");
+                    let newChatBox = newDocument.getElementById("chatBox").innerHTML;
+                    document.getElementById("chatBox").innerHTML = newChatBox;
+                    scrollToBottom();
+                })
+                .catch(error => console.log("Error fetching messages:", error));
         }
 
         setInterval(fetchMessages, 5000); // ✅ อัปเดตข้อความใหม่ทุก 5 วินาที
 
-        // ✅ Handle Message Sending
-        document.getElementById("chatForm").addEventListener("submit", function(event) {
-            event.preventDefault();
-            let chatInput = document.getElementById("chatInput");
-            let messageText = chatInput.value.trim();
-
-            if (messageText === "") return;
-
-            fetch("{% url 'user_chat' %}", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}",
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ message: messageText }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    fetchMessages();
-                    chatInput.value = "";
-                } else {
-                    alert("❌ ส่งข้อความไม่สำเร็จ!");
-                }
-            })
-            .catch(error => console.error("Error:", error));
-        });
+        
     </script>
 
 </body>
+
 </html>
