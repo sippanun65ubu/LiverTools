@@ -1,80 +1,154 @@
 {% load cart_extras %}
-<div class="payment-status-container">
-    <h1 class="text-2xl font-semibold text-center">📋 ประวัติการสั่งซื้อ</h1>
+<div class="container mt-5">
+
+    <!-- ✅ Header + ปุ่มเลือกซื้อสินค้า (อยู่แถวเดียวกัน, ปุ่มไปทางซ้าย, หัวข้อไปทางขวา) -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="order-2 mb-0">📋 ประวัติการสั่งซื้อ</h1>
+        <a href="{% url 'product_list' %}" class="btn-shop-more order-1">🛍 ย้อนกลับ</a>
+    </div>
 
     {% if orders %}
-        {% for order in orders %}
-        <div class="order-box">
-            <h2>📄 รายละเอียดการสั่งซื้อ</h2>
-            <p><strong>วันที่สั่งซื้อ:</strong> {{ order.created_at }}</p>        
-
-            <!-- ที่อยู่-->
-            {% if order.address_line %}
-            <p><strong>ที่อยู่สำหรับจัดส่ง:</strong> {{ order.address_line }} ({{ order.zip_code }})</p>
-        {% endif %}
-            <!-- ตารางแสดงสินค้าในออเดอร์ -->
-            <table class="order-table">
-                <thead>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle text-center">
+                <thead class="table-dark">
                     <tr>
-                        <th>สินค้า</th>
-                        <th>จำนวน</th>
-                        <th>ราคา</th>
-                        <th>รวม</th>
+                        <th>📅 วันที่สั่งซื้อ</th>
+                        <th>📍 ที่อยู่จัดส่ง</th>
+                        <th>🛒 รายการสินค้า</th>
+                        <th>💰 ราคารวม</th>
+                        <th>💳 สถานะ</th>
+                        <th>📜 สลิป</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in order.items.all %}
+                    {% for order in orders %}
                     <tr>
-                        <td>{{ item.product.name }}</td>
-                        <td>{{ item.quantity }}</td>
-                        <!-- If item stores price in item.price, use that. Otherwise, use item.product.price -->
-                        <td>{{ item.price }} บาท</td>
-                        <!-- Multiply quantity by price (assuming you have a custom multiply filter or do it in the view) -->
-                        <td>{{ item.quantity|multiply:item.price }} บาท</td>
+                        <td>{{ order.created_at|date:"d M Y, H:i" }}</td>
+                        <td>
+                            {% if order.address_line %}
+                                {{ order.address_line }} ({{ order.zip_code }})
+                            {% else %}
+                                <span class="text-muted">- ไม่มีข้อมูล -</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <ul class="list-unstyled mb-0">
+                                {% for item in order.items.all %}
+                                    <li>📦 {{ item.product.name }} ({{ item.quantity }} ชิ้น) - {{ item.price }} บาท</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td>
+                            <strong class="text-success">
+                                {{ order.total_price|default:"คำนวณในระบบ" }} บาท
+                            </strong>
+                        </td>
+                        <td>
+                            {% if order.status == "waiting_confirm" %}
+                                <span class="badge bg-warning">⏳ รออนุมัติ</span>
+                            {% elif order.status == "approved" %}
+                                <span class="badge bg-success">✅ กำลังดำเนินการจัดส่ง</span>
+                            {% elif order.status == "rejected" %}
+                                <span class="badge bg-danger">❌ ปฏิเสธ</span>
+                            {% elif order.status == "completed" %}
+                                <span class="badge bg-primary">🎉 สำเร็จ</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if order.payment_slip %}
+                                <a href="{{ order.payment_slip.url }}" target="_blank">
+                                    <img src="{{ order.payment_slip.url }}" class="img-thumbnail" style="max-width: 80px;">
+                                </a>
+                            {% else %}
+                                <span class="text-danger">❌ ไม่มีสลิป</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-
-            <!-- หากคุณคำนวณราคารวมใน model หรือ view, ใช้ {{ order.total_price }} -->
-            <!-- หรือคำนวณในเทมเพลตด้วย for-loop, up to your approach. -->
-            <h3 class="total-price">
-                💰 ราคารวม:
-                <strong>
-                    {% if order.total_price %}
-                        {{ order.total_price }} บาท
-                    {% else %}
-                        <!-- Fallback if you haven't implemented total_price on the model -->
-                        กรุณาคำนวณราคารวมใน view หรือ model property
-                    {% endif %}
-                </strong>
-            </h3>
-            <h2 class="text-xl font-semibold">💳 สถานะการชำระเงิน</h2>
-            {% if order.status == "waiting_confirm" %}
-                <p class="status pending">⏳ รอแอดมินตรวจสอบ</p>
-            {% elif order.status == "approved" %}
-                <p class="status success">✅ อนุมัติแล้ว</p>
-            {% elif order.status == "rejected" %}
-                <p class="status failed">❌ ถูกปฏิเสธ</p>
-            {% elif order.status == "completed" %}
-                <p class="status success">🎉 สำเร็จ</p>
-            {% endif %}
-
-            {% if order.payment_slip %}
-                <h2 class="text-xl font-semibold">📜 สลิปการโอนเงิน</h2>
-                <a href="{{ order.payment_slip.url }}" target="_blank">
-                    <img src="{{ order.payment_slip.url }}" alt="สลิป" width="150">
-                </a>
-            {% else %}
-                <p>❌ ไม่มีสลิป</p>
-            {% endif %}
         </div>
-        {% endfor %}
     {% else %}
-        <p>❌ ไม่มีประวัติการสั่งซื้อ</p>
+        <p class="text-center text-muted">❌ ไม่มีประวัติการสั่งซื้อ</p>
     {% endif %}
-
-    <div class="shop-more-container">
-        <a href="{% url 'product_list' %}" class="btn-shop-more">🛍 เลือกซื้อสินค้าต่อ</a>
-    </div>
 </div>
+
+<!-- 🔝 ปุ่มกลับไปด้านบน -->
+<button onclick="scrollToTop()" id="backToTopBtn" title="กลับไปด้านบน">🔝 กลับไปด้านบน</button>
+
+<!-- ✅ JavaScript -->
+<script>
+    window.onscroll = function() { scrollFunction(); };
+
+    function scrollFunction() {
+        var btn = document.getElementById("backToTopBtn");
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            btn.style.display = "block";
+        } else {
+            btn.style.display = "none";
+        }
+    }
+
+    function scrollToTop() {
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+</script>
+
+<!-- ✅ CSS -->
+<style>
+    .table th, .table td {
+        vertical-align: middle;
+        border: 1px solid #dee2e6;
+        padding: 10px;
+    }
+    .table th {
+        background-color: #343a40;
+        color: white;
+    }
+    .badge {
+        font-size: 1rem;
+        padding: 8px 12px;
+    }
+
+/* 🎨 ปุ่ม "เลือกซื้อสินค้าต่อ" */
+.btn-shop-more {
+    padding: 10px 18px;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(to right, #ff7e5f, #ff3e8e);
+    border: none;
+    border-radius: 25px;
+    transition: all 0.3s ease-in-out;
+    text-decoration: none;
+    box-shadow: 0px 4px 10px rgba(255, 62, 142, 0.3);
+}
+
+.btn-shop-more:hover {
+    background: linear-gradient(to right, #ff3e8e, #ff7e5f);
+    transform: scale(1.05);
+    box-shadow: 0px 6px 15px rgba(255, 62, 142, 0.4);
+}
+
+/* 🔝 ปุ่ม Back to Top */
+#backToTopBtn {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#backToTopBtn:hover {
+    background-color: #0056b3;
+}
+
+</style>

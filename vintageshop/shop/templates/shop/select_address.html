@@ -2,29 +2,88 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>เลือกที่อยู่</title>
+    <title>📍 เลือกที่อยู่</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .address-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        .address-card {
+            border-radius: 10px;
+            transition: all 0.3s;
+            padding: 10px;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            background: #fff;
+        }
+        .address-card:hover {
+            background: #f1f1f1;
+            transform: scale(1.02);
+        }
+        .address-card input {
+            margin-right: 10px;
+        }
+        .btn-next {
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
+            color: white;
+            font-weight: bold;
+            border: none;
+            transition: all 0.3s;
+            box-shadow: 0px 4px 8px rgba(255, 75, 43, 0.3);
+        }
+        .btn-next:hover {
+            background: linear-gradient(to right, #ff4b2b, #ff416c);
+            transform: scale(1.05);
+            box-shadow: 0px 6px 12px rgba(255, 75, 43, 0.4);
+        }
+        .btn-manage {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <h1>เลือกที่อยู่สำหรับการจัดส่ง</h1>
-    <form method="POST">
-        {% csrf_token %}
-        {% if addresses %}
-            <ul>
-            {% for addr in addresses %}
-                <li>
-                    <label>
-                        <input type="radio" name="address_id" value="{{ addr.id }}">
-                        {{ addr.address_line }} ({{ addr.zip_code }})
-                    </label>
-                </li>
-            {% endfor %}
-            </ul>
-        {% else %}
-            <p>คุณยังไม่มีที่อยู่บันทึกไว้</p>
-        {% endif %}
-        <button type="submit">ถัดไป</button>
-    </form>
 
-    <p><a href="{% url 'address_list' %}">จัดการที่อยู่</a></p>
+    <!-- 📍 ฟอร์มเลือกที่อยู่ -->
+    <div class="address-container">
+        <h2>📍 เลือกที่อยู่สำหรับการจัดส่ง</h2>
+        <form method="POST">
+            {% csrf_token %}
+            
+            {% if addresses %}
+                <div class="list-group">
+                {% for addr in addresses %}
+                    <label class="list-group-item address-card">
+                        <input type="radio" name="address_id" value="{{ addr.id }}" required>
+                        🏠 {{ addr.address_line }} ({{ addr.zip_code }})
+                    </label>
+                {% endfor %}
+                </div>
+            {% else %}
+                <p class="alert alert-warning">⚠️ คุณยังไม่มีที่อยู่บันทึกไว้</p>
+            {% endif %}
+
+            <button type="submit" class="btn btn-next w-100 mt-3">➡️ ถัดไป</button>
+        </form>
+
+        <!-- 🔧 ปุ่มจัดการที่อยู่ -->
+        <a href="{% url 'address_list' %}" class="btn btn-outline-primary btn-manage">🔧 จัดการที่อยู่</a>
+    </div>
+
 </body>
 </html>

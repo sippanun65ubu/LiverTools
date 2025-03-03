@@ -2,33 +2,126 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>จัดการที่อยู่ของคุณ</title>
+    <title>📍 จัดการที่อยู่ของคุณ</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-</head>
-<body class="container mt-5">
-    <h1>ที่อยู่ของคุณ</h1>
+    <style>
+        /* 🎨 พื้นหลังแบบ Gradient */
+        body {
+            background: linear-gradient(to right, #36D1DC, #5B86E5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            min-height: 100vh;
+            padding: 30px;
+        }
 
+        /* 📦 กล่องที่อยู่ */
+        .address-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        /* 🖌️ หัวข้อ */
+        .address-container h1, .address-container h2 {
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* 🏠 กล่องแต่ละที่อยู่ */
+        .address-card {
+            border-radius: 10px;
+            transition: 0.3s;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .address-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 🗑️ ปุ่มลบ */
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+            transform: scale(1.05);
+        }
+
+        /* ✅ ปุ่มบันทึก */
+        .btn-save {
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
+            color: white;
+            font-weight: bold;
+            border: none;
+            transition: all 0.3s;
+            box-shadow: 0px 4px 8px rgba(255, 75, 43, 0.3);
+        }
+
+        .btn-save:hover {
+            background: linear-gradient(to right, #ff4b2b, #ff416c);
+            transform: scale(1.05);
+            box-shadow: 0px 6px 12px rgba(255, 75, 43, 0.4);
+        }
+
+        /* 🔙 ปุ่มกลับไปร้านค้า */
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: #5a6268;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+
+<!-- 📍 ฟอร์มจัดการที่อยู่ -->
+<div class="address-container">
+    <h1>📍 ที่อยู่ของคุณ</h1>
+
+    <!-- 🏠 รายการที่อยู่ -->
     {% if addresses %}
-        <ul class="list-group mb-4">
-            {% for addr in addresses %}
-                <li class="list-group-item">
-                    <p><strong>ที่อยู่:</strong> {{ addr.address_line }}</p>
-                    <p><strong>รหัสไปรษณีย์:</strong> {{ addr.zip_code }}</p>
-                    <a href="{% url 'delete_address' addr.id %}" onclick="return confirm('แน่ใจหรือไม่ที่จะลบที่อยู่นี้?');" class="btn btn-danger btn-sm">ลบ</a>
-                </li>
-            {% endfor %}
-        </ul>
+        {% for addr in addresses %}
+            <div class="address-card">
+                <p><strong>🏠 ที่อยู่:</strong> {{ addr.address_line }}</p>
+                <p><strong>📮 รหัสไปรษณีย์:</strong> {{ addr.zip_code }}</p>
+                <a href="{% url 'delete_address' addr.id %}" onclick="return confirm('แน่ใจหรือไม่ที่จะลบที่อยู่นี้?');" class="btn btn-delete w-100">🗑️ ลบที่อยู่</a>
+            </div>
+        {% endfor %}
     {% else %}
-        <p>คุณยังไม่มีที่อยู่บันทึกไว้</p>
+        <p class="alert alert-warning text-center">⚠️ คุณยังไม่มีที่อยู่บันทึกไว้</p>
     {% endif %}
 
-    <h2>เพิ่มที่อยู่ใหม่</h2>
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">บันทึกที่อยู่</button>
-    </form>
+    <!-- ➕ เพิ่มที่อยู่ใหม่ -->
+    <h2>➕ เพิ่มที่อยู่ใหม่</h2>
+    <div class="card p-4">
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-save w-100">✅ บันทึกที่อยู่</button>
+        </form>
+    </div>
 
-    <p class="mt-3"><a href="{% url 'product_list' %}">กลับไปยังรายการสินค้า</a></p>
+    <!-- 🔙 ปุ่มกลับไปยังร้านค้า -->
+    <div class="text-center mt-4">
+        <a href="{% url 'product_list' %}" class="btn btn-back">⬅️ กลับไปยังร้านค้า</a>
+    </div>
+</div>
+
 </body>
 </html>

@@ -3,81 +3,66 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>Vintage Shop</title>
+    <title>🛍️ Vintage Shop</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
     <style>
-        /* Optional: style the price inputs side by side */
-        .price-range {
-            display: flex;
-            gap: 10px;
+        body {
+            background-color: #f8f9fa;
         }
-        .price-range input {
-            width: 80px;
-            text-align: center;
+        .product-card {
+            border-radius: 10px;
+            transition: 0.3s;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
         }
-        /* Scrollable container for categories */
-        .category-scroll {
-            max-height: 200px;
+        .product-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .category-scroll, .size-scroll {
+            max-height: 180px;
             overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 5px;
-        }
-        /* Scrollable container for sizes */
-        .size-scroll {
-            max-height: 150px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 5px;
-            margin-top: 10px;
+            border-radius: 5px;
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
         }
     </style>
 </head>
-<body>
-    <h1>รายการสินค้า</h1>
+<body class="container mt-4">
 
-    <!-- Check if user is logged in -->
-    {% if user.is_authenticated %}
-        <p>สวัสดี, {{ user.username }}!  
-            <a href="{% url 'logout' %}"><button>ออกจากระบบ</button></a>
-            <a href="{% url 'edit_profile' %}"><button>แก้ไขโปรไฟล์</button></a>
-            <a href="{% url 'address_list' %}"><button>เพิ่มที่อยู่</button></a>
-            <a href="{% url 'payment_status' %}"><button>📋 ตรวจสอบสถานะคำสั่งซื้อ</button></a>
-        </p>
-        <a href="{% url 'user_chat' %}"><button>Chat กับแอดมิน</button></a> <!-- ปุ่มแชท -->
-    {% else %}
-        <a href="{% url 'login' %}"><button>Login</button></a>
-    {% endif %}
-
-
-    <!-- Sidebar layout -->
-    <div style="display: flex;">
-        <!-- Sidebar -->
-        <div style="width: 200px; margin-right: 20px;">
-            <form method="GET" action="{% url 'product_list' %}">
-                <!-- Search box -->
-                <input type="text" name="q" placeholder="ค้นหาสินค้า..." value="{{ request.GET.q }}">
-                <br><br>
-                {% if user.is_authenticated %}
-                <p>
-                    <a href="{% url 'cart_detail' %}">
-                        <!-- Could be an icon, but here just text. -->
-                        ตะกร้าของคุณ ({{ cart_items_count }})
-                    </a>
-                </p>
+    <!-- ✅ Header & User Info -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>🛍️ รายการสินค้า</h1>
+        <div>
+            {% if user.is_authenticated %}
+                <span class="fw-bold">สวัสดี, {{ user.username }}!</span>
+                <a href="{% url 'logout' %}" class="btn btn-danger btn-sm">🚪 ออกจากระบบ</a>
+                <a href="{% url 'edit_profile' %}" class="btn btn-info btn-sm">✏️ แก้ไขโปรไฟล์</a>
+                <a href="{% url 'address_list' %}" class="btn btn-secondary btn-sm">📍 เพิ่มที่อยู่</a>
+                <a href="{% url 'payment_status' %}" class="btn btn-warning btn-sm">📋 ตรวจสอบคำสั่งซื้อ</a>
+                <a href="{% url 'user_chat' %}" class="btn btn-primary btn-sm">💬 ไปที่หน้าแชท</a> 
+                <a href="{% url 'cart_detail' %}" class="btn btn-success btn-sm">🛒 ตะกร้าสินค้า ({{ cart_items_count }})</a> <!-- ✅ เพิ่มปุ่มตะกร้า -->
             {% else %}
-                <!-- Possibly hide or show 0 if user is not authenticated -->
-                <p>ตะกร้าของคุณ (0)</p>
+                <a href="{% url 'login' %}" class="btn btn-primary">🔑 เข้าสู่ระบบ</a>
             {% endif %}
-                <!-- Price Range -->
-                <h3>ช่วงราคา</h3>
-                <div class="price-range">
-                    <input type="text" name="min_price" placeholder="B ใส่ราคาต่ำ" value="{{ min_price }}">
-                    <span>—</span>
-                    <input type="text" name="max_price" placeholder="B ใส่ราคาสูง" value="{{ max_price }}">
-                </div>
-                <br>
+        </div>
+    </div>
 
-                <!-- Category checkboxes in a scrollable container -->
-                <h3>ประเภทสินค้า</h3>
+    <!-- ✅ Sidebar + Product Layout -->
+    <div class="row">
+        <div class="col-md-3">
+            <form method="GET" action="{% url 'product_list' %}" class="p-3 bg-white rounded shadow-sm">
+                <h4>🔍 ค้นหาสินค้า</h4>
+                <input type="text" name="q" class="form-control mb-3" placeholder="พิมพ์ชื่อสินค้า..." value="{{ request.GET.q }}">
+
+                <h5>💰 ช่วงราคา</h5>
+                <div class="d-flex gap-2">
+                    <input type="number" name="min_price" class="form-control" placeholder="ต่ำสุด" value="{{ min_price }}">
+                    <input type="number" name="max_price" class="form-control" placeholder="สูงสุด" value="{{ max_price }}">
+                </div>
+
+                <h5 class="mt-3">🏷️ หมวดหมู่</h5>
                 <div class="category-scroll">
                     {% for category in categories %}
                         <label>
@@ -87,9 +72,7 @@
                         </label><br>
                     {% endfor %}
                 </div>
-                
-                <!-- Size checkboxes in a scrollable container -->
-                <h3>ขนาดเสื้อ</h3>
+                <h5 class="mt-3">👕 ขนาดเสื้อ</h5>
                 <div class="size-scroll">
                     {% for value, label in size_choices %}
                         <label>
@@ -99,46 +82,48 @@
                         </label><br>
                     {% endfor %}
                 </div>
-                
-                <br>
-                <button type="submit">ตกลง</button>
-                <a href="{% url 'product_list' %}">ลบทั้งหมด</a>
+                <button type="submit" class="btn btn-success mt-3 w-100">📌 ตกลง</button>
+                <a href="{% url 'product_list' %}" class="btn btn-outline-danger w-100 mt-2">❌ ล้างค่าทั้งหมด</a>
             </form>
         </div>
 
-        <!-- Main content: product listing -->
-        <div style="flex-grow: 1;">
-            <ul>
+        <!-- ✅ Product Listing -->
+        <div class="col-md-9">
+            <div class="row">
                 {% for product in products %}
-                <li>
-                    <strong>{{ product.name }}</strong> - ราคา: {{ product.price }} บาท
-                    <br>ขนาด: {{ product.size }}
-                    <br>หมวดหมู่: 
-                    {% if product.category.all %}
-                        {% for cat in product.category.all %}
-                            {{ cat.name }}{% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        (ไม่มีหมวดหมู่)
-                    {% endif %}
-                    <br>{{ product.description }}
-                    {% if product.image %}
-                        <br><img src="{{ product.image.url }}" width="100">
-                    {% endif %}
-                    <br>จำนวนคงเหลือ: {{ product.quantity }}
-                    <br>
-                    {% if user.is_authenticated %}
-                    <form method="post" action="{% url 'add_to_cart' product.id %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="product_id" value="{{ product.id }}">
-                        <input type="number" name="quantity" value="1" min="1">
-                        <button type="submit">เพิ่มใส่ตะกร้า</button>              
-                    </form>
-                    {% else %}
-                        <a href="{% url 'register' %}"><button>สมัครสมาชิกเพื่อซื้อสินค้า</button></a>
-                    {% endif %}
-                </li>
-            {% empty %}
-             <p>ไม่พบสินค้า</p>
-        {% endfor %}
-                
+                    <div class="col-md-4 mb-4">
+                        <div class="card product-card h-100">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">{{ product.name }}</h5>
+                                <p class="text-muted">💰 ราคา: <strong>{{ product.price }} บาท</strong></p>
+                                <p>📏 ขนาด: {{ product.size }}</p>
+                                <p>📦 จำนวนคงเหลือ: <span class="fw-bold {% if product.quantity == 0 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ product.quantity }} ชิ้น
+                                </span></p>
+
+                                {% if user.is_authenticated %}
+                                    <form method="post" action="{% url 'add_to_cart' product.id %}">
+                                        {% csrf_token %}
+                                        <div class="input-group mb-2">
+                                            <input type="number" name="quantity" class="form-control" value="1" min="1">
+                                            <button type="submit" class="btn btn-success">🛒 เพิ่มใส่ตะกร้า</button>
+                                        </div>
+                                    </form>
+                                {% else %}
+                                    <a href="{% url 'register' %}" class="btn btn-outline-primary w-100">🔑 สมัครสมาชิกเพื่อซื้อ</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-center text-muted">❌ ไม่พบสินค้า</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

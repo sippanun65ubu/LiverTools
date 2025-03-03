@@ -62,35 +62,6 @@ def edit_profile(request):
 
     return render(request, "user/edit_profile.html", {"form": form})
 
-from .forms import AddressForm
-
-@login_required
-def add_address(request):
-    if request.method == "POST":
-        form = AddressForm(request.POST, instance=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "ที่อยู่ของคุณถูกบันทึกเรียบร้อยแล้ว!")
-            return redirect("product_list")  # เปลี่ยนไปหน้ารายการสินค้า
-    else:
-        form = AddressForm(instance=request.user)
-
-    return render(request, "user/add_address.html", {"form": form})
-
-
-@login_required
-def edit_address(request):
-    if request.method == "POST":
-        form = AddressForm(request.POST, instance=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "ที่อยู่ของคุณถูกอัปเดตเรียบร้อยแล้ว!")
-            return redirect("edit_address")  
-    else:
-        form = AddressForm(instance=request.user)
-
-    return render(request, "user/edit_address.html", {"form": form})
-
 
 @login_required
 def address_list(request):

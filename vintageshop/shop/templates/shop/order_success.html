@@ -4,63 +4,148 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>สั่งซื้อสำเร็จ</title>
+    <title>✅ สั่งซื้อสำเร็จ</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .order-container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: center; /* ✅ จัดปุ่มให้อยู่ตรงกลาง */
+            gap: 10px;
+        }
+        .btn-custom {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+            border: none;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .payment-slip {
+            display: block;
+            margin: 10px auto;
+            max-width: 300px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .alert-success {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
 </head>
-<body>
-    {% if order.status == "completed" %}
-        <h1>ขอบคุณสำหรับการสั่งซื้อ!</h1>
-    {% else %}
-        <h2>สรุปคำสั่งซื้อ</h2>
-    {% endif %}
-    <p>หมายเลขคำสั่งซื้อ: {{ order.id }}</p>
-    <p>วันที่: {{ order.created_at }}</p>
+<body class="container mt-4">
 
-    {% if order.address_line %}
-        <h3>ที่อยู่สำหรับจัดส่ง</h3>
-        <p>{{ order.address_line }}</p>
-        <p>รหัสไปรษณีย์: {{ order.zip_code }}</p>
-    {% endif %}
+    <!-- ✅ กล่องแสดงสถานะ -->
+    <div class="order-container">
+        {% if order.status == "completed" %}
+            <h1 class="text-center text-success">✅ ขอบคุณสำหรับการสั่งซื้อ!</h1>
+            <p class="alert alert-success">คำสั่งซื้อของคุณเสร็จสมบูรณ์แล้ว</p>
+        {% else %}
+            <h2 class="text-center">📦 สรุปคำสั่งซื้อ</h2>
+        {% endif %}
 
-    <table>
-        <thead>
-            <tr>
-                <th>สินค้า</th>
-                <th>จำนวน</th>
-                <th>ราคา</th>
-                <th>รวม</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in order.items.all %}
-            <tr>
-                <td>{{ item.product.name }}</td>
-                <td>{{ item.quantity }}</td>
-                <td>{{ item.price }} บาท</td>
-                <td>{{ item.quantity|multiply:item.price }} บาท</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    
-    {% if order.payment_slip %}
-        <p>คุณได้อัปโหลดสลิปการโอนเงินแล้ว</p>
-        <img src="{{ order.payment_slip.url }}" width="300">
-        {% if order.status != "completed" %}
-            <!-- ปุ่มเสร็จสิ้น ให้แสดงเมื่อยังไม่ยืนยัน -->
-            <form method="post" action="{% url 'order_complete' order.id %}">
+        <!-- 📌 รายละเอียดคำสั่งซื้อ -->
+        <p><strong>🆔 หมายเลขคำสั่งซื้อ:</strong> {{ order.id }}</p>
+        <p><strong>📅 วันที่:</strong> {{ order.created_at }}</p>
+
+        {% if order.address_line %}
+            <h4>📍 ที่อยู่สำหรับจัดส่ง</h4>
+            <p>{{ order.address_line }} (รหัสไปรษณีย์: {{ order.zip_code }})</p>
+        {% endif %}
+
+        <!-- ✅ รายการสินค้า -->
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>สินค้า</th>
+                        <th>จำนวน</th>
+                        <th>ราคา</th>
+                        <th>รวม</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items.all %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.price|floatformat:2 }} บาท</td>
+                        <td><strong>{{ item.quantity|multiply:item.price|floatformat:2 }} บาท</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ✅ อัปโหลดสลิปการโอนเงิน -->
+        {% if order.payment_slip %}
+            <h4>📜 สลิปการโอนเงิน</h4>
+            <img src="{{ order.payment_slip.url }}" class="payment-slip">
+            
+            {% if order.status != "completed" %}
+                <!-- ✅ ปุ่มเสร็จสิ้นอยู่ตรงกลาง -->
+                <div class="btn-container">
+                    <form method="post" action="{% url 'order_complete' order.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-custom">✅ ยืนยันคำสั่งซื้อ</button>
+                    </form>
+                </div>
+            {% endif %}
+        {% else %}
+            <h4 class="text-danger">⚠️ กรุณาอัปโหลดสลิปการโอนเงิน</h4>
+            <form method="post" action="{% url 'upload_payment_slip' order.id %}" enctype="multipart/form-data">
                 {% csrf_token %}
-                <button type="submit">เสร็จสิ้น</button>
+                <input type="file" name="payment_slip" class="form-control mb-2" required>
+                <div class="btn-container">
+                    <button type="submit" class="btn btn-primary btn-custom">📤 อัปโหลดสลิป</button>
+                </div>
             </form>
         {% endif %}
-    {% else %}
-        <p>กรุณาอัปโหลดสลิปการโอนเงิน</p>
-        <form method="post" action="{% url 'upload_payment_slip' order.id %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            <input type="file" name="payment_slip" required>
-            <button type="submit">อัปโหลด</button>
-        </form>
-    {% endif %}
 
-    <p><a href="{% url 'product_list' %}">กลับไปยังรายการสินค้า</a></p>
+        <!-- 🔙 ปุ่มกลับไปซื้อสินค้า -->
+        <div class="btn-container">
+            <a href="{% url 'product_list' %}" class="btn btn-secondary btn-custom">🔙 กลับไปซื้อสินค้า</a>
+        </div>
+    </div>
+
 </body>
 </html>
