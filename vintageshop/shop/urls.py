@@ -22,6 +22,7 @@ urlpatterns = [
     path('admin-orders/reject/<int:order_id>/', views.admin_reject_payment, name='admin_reject_payment'),
     path('select-address/', views.select_address, name='select_address'),
     path('checkout/', views.checkout, name='checkout'),
+    path('admin/sales-report/', views.admin_sales_report, name='admin_sales_report'),
 ]
 
 

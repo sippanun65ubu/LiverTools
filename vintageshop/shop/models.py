@@ -22,16 +22,18 @@ class Product(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    quantity = models.IntegerField(default=1)
+    quantity = models.PositiveIntegerField(default=1)  # ✅ ใช้ PositiveIntegerField
     size = models.CharField(max_length=3, choices=SIZE_CHOICES)
-    
-    # Change from a single ForeignKey to a ManyToManyField
     category = models.ManyToManyField(Category, blank=True)
-    
     image = models.ImageField(upload_to='products/', blank=True)
+
+    def is_available(self):
+        """ ✅ ตรวจสอบว่าสินค้ามี stock หรือไม่ """
+        return self.quantity > 0  # ✅ ต้องมีจำนวนมากกว่า 0 ถึงจะขายได้
 
     def __str__(self):
         return self.name
+
 
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)

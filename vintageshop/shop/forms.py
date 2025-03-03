@@ -59,3 +59,4 @@ class SelectAddressForm(forms.Form):
         super().__init__(*args, **kwargs)
         # Only show addresses belonging to this user
         self.fields['address'].queryset = user.addresses.all()
+

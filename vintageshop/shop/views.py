@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.contrib.admin.views.decorators import staff_member_required
 from user.models import Address
+from django.contrib import messages
 
 User = get_user_model() 
 
@@ -67,13 +68,19 @@ def admin_dashboard(request):
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            return redirect('admin_dashboard')  # รีเฟรชหน้าแอดมินหลังเพิ่มสินค้า
+            product = form.save(commit=False)
+            if product.quantity == 0:
+                messages.error(request, "ไม่สามารถเพิ่มสินค้าที่มีจำนวน 0 ได้")
+                return redirect('admin_dashboard')  # ✅ ป้องกันการเพิ่มสินค้า
+            product.save()
+            messages.success(request, "เพิ่มสินค้าสำเร็จ")
+            return redirect('admin_dashboard')
 
     return render(request, 'shop/admin_dashboard.html', {
         'products': products,
         'form': form
     })
+
 
 def delete_product(request, product_id):
     product = get_object_or_404(Product, id=product_id)
@@ -110,7 +117,17 @@ def cart_detail(request):
 @login_required
 def add_to_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id)
+
+    # ✅ ตรวจสอบว่าสินค้ามี stock เพียงพอหรือไม่
     quantity = int(request.POST.get('quantity', 1))
+    if product.quantity == 0:
+        messages.error(request, "สินค้าไม่มีในสต็อก ไม่สามารถเพิ่มลงตะกร้าได้")
+        return redirect('product_list')  # หรือเปลี่ยนไปยังหน้าที่เหมาะสม
+
+    if quantity > product.quantity:
+        messages.error(request, f"สินค้าในสต็อกมีเพียง {product.quantity} ชิ้นเท่านั้น")
+        return redirect('product_list')
+
     cart = get_or_create_cart(request.user)
 
     # ตรวจสอบว่าสินค้านี้มีอยู่ในตะกร้าแล้วหรือไม่
@@ -121,30 +138,67 @@ def add_to_cart(request, product_id):
     )
 
     if not created:
-        cart_item.quantity += quantity  # ถ้ามีอยู่แล้วให้เพิ่มจำนวนสินค้า
+        # ✅ อัปเดตจำนวนสินค้าในตะกร้า (ห้ามเกิน stock)
+        if cart_item.quantity + quantity > product.quantity:
+            messages.error(request, f"คุณสามารถเพิ่มได้อีกเพียง {product.quantity - cart_item.quantity} ชิ้นเท่านั้น")
+            return redirect('cart_detail')
+
+        cart_item.quantity += quantity  
         cart_item.save()
 
-    return redirect('cart_detail')
+    # ✅ ลดจำนวน stock ของสินค้า
+    product.quantity -= quantity
+    product.save()
 
+    messages.success(request, "เพิ่มสินค้าเข้าไปในตะกร้าสำเร็จ!")
+    return redirect('cart_detail')
 
 @login_required
 def remove_from_cart(request, item_id):
     cart = get_or_create_cart(request.user)
     cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
+
+    # ✅ คืนจำนวนสินค้าเข้า stock ก่อนลบออกจากตะกร้า
+    product = cart_item.product
+    product.quantity += cart_item.quantity
+    product.save()
+
+    # ✅ ลบสินค้าออกจากตะกร้า
     cart_item.delete()
+    messages.success(request, "ลบสินค้าออกจากตะกร้าและคืนสต็อกสำเร็จ!")
+
     return redirect('cart_detail')
+
 
 @login_required
 def update_cart_item(request, item_id):
     cart = get_or_create_cart(request.user)
     cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
-    
+
     if request.method == 'POST':
         new_quantity = int(request.POST.get('quantity', 1))
+        
+        # ✅ เช็คว่าผู้ใช้ลดจำนวนสินค้าหรือไม่
+        if new_quantity < cart_item.quantity:
+            difference = cart_item.quantity - new_quantity
+            cart_item.product.quantity += difference  # ✅ คืนสินค้าเข้า stock
+            cart_item.product.save()
+        elif new_quantity > cart_item.quantity:
+            # ✅ ตรวจสอบว่าสินค้าในสต็อกเพียงพอหรือไม่
+            difference = new_quantity - cart_item.quantity
+            if difference > cart_item.product.quantity:
+                messages.error(request, f"สินค้าในสต็อกมีเพียง {cart_item.product.quantity} ชิ้นเท่านั้น")
+                return redirect('cart_detail')
+
+            cart_item.product.quantity -= difference  # ✅ ลดสินค้าใน stock
+            cart_item.product.save()
+
         cart_item.quantity = new_quantity
         cart_item.save()
-    
+        messages.success(request, "อัปเดตจำนวนสินค้าในตะกร้าสำเร็จ!")
+
     return redirect('cart_detail')
+
 
 @login_required
 def checkout(request):
@@ -335,3 +389,50 @@ def select_address(request):
             request.session['selected_address_id'] = selected_address_id
             return redirect('checkout')  # Move to the checkout step
     return render(request, 'shop/select_address.html', {'addresses': addresses})
+
+from django.shortcuts import render
+from django.db.models import Sum, Count
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models.functions import TruncDate
+from .models import Order
+
+def admin_sales_report(request):
+    today = timezone.now().date()
+
+    # ดึงคำสั่งซื้อที่สร้างวันนี้
+    orders = Order.objects.filter(created_at__date=today)
+
+    # คำนวณจำนวนออเดอร์ทั้งหมดของวันนี้
+    daily_sales = orders.count()
+
+    # คำนวณจำนวนสินค้าทั้งหมดที่ขายวันนี้
+    total_items_sold = sum(order.items.aggregate(Sum('quantity'))['quantity__sum'] or 0 for order in orders)
+
+    # คำนวณยอดรวมของออเดอร์แต่ละรายการ
+    for order in orders:
+        order.total_price = sum(item.quantity * item.price for item in order.orderitem_set.all())
+
+    # ✅ คำนวณแนวโน้มยอดขายย้อนหลัง 7 วัน
+    sales_trend = (
+        Order.objects.filter(created_at__gte=today - timedelta(days=6))
+        .annotate(date_created=TruncDate('created_at'))
+        .values('date_created')
+        .annotate(total_orders=Count('id'))
+        .order_by('date_created')
+    )
+
+    trend_labels = [entry["date_created"].strftime("%Y-%m-%d") for entry in sales_trend]
+    trend_data = [entry["total_orders"] for entry in sales_trend]
+
+    context = {
+        "orders": orders,
+        "daily_sales": daily_sales,
+        "total_items_sold": total_items_sold,
+        "trend_labels": trend_labels,
+        "trend_data": trend_data,
+    }
+
+    return render(request, "shop/admin_sales_report.html", context)
+
+
