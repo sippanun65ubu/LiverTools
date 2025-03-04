@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,6 +15,7 @@
             min-height: 100vh;
             padding: 20px;
         }
+
         .edit-container {
             background: white;
             padding: 30px;
@@ -22,18 +24,21 @@
             width: 100%;
             max-width: 600px;
         }
+
         .edit-header {
             font-size: 24px;
             font-weight: bold;
             text-align: center;
             margin-bottom: 20px;
         }
+
         .section-title {
             font-size: 18px;
             font-weight: bold;
             margin-top: 15px;
             color: #333;
         }
+
         .btn-save {
             background: linear-gradient(to right, #ff7e5f, #ff3e8e);
             color: white;
@@ -45,10 +50,12 @@
             transition: all 0.3s;
             border-radius: 8px;
         }
+
         .btn-save:hover {
             background: linear-gradient(to right, #ff3e8e, #ff7e5f);
             transform: scale(1.05);
         }
+
         .btn-back {
             width: 100%;
             margin-top: 10px;
@@ -60,12 +67,16 @@
             border-radius: 8px;
             transition: all 0.3s;
         }
+
         .btn-back:hover {
             background: #545b62;
         }
-        .form-control, select {
+
+        .form-control,
+        select {
             border-radius: 8px;
         }
+
         .image-preview {
             display: block;
             max-width: 100%;
@@ -73,72 +84,76 @@
             border-radius: 8px;
             margin-bottom: 15px;
         }
+
         .input-group {
-        margin-bottom: 15px; /* เพิ่มช่องว่างระหว่างช่องกรอกข้อมูล */
+            margin-bottom: 15px;
         }
 
         .upload-section {
-        margin-bottom: 20px; /* ✅ เพิ่มช่องว่างก่อนปุ่มบันทึก */
+            margin-bottom: 20px;
         }
     </style>
 </head>
+
 <body>
 
-<div class="edit-container">
-    <h2 class="edit-header">🛠️ แก้ไขสินค้า</h2>
+    <div class="edit-container">
+        <h2 class="edit-header">🛠️ แก้ไขสินค้า</h2>
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
 
-        <!-- ภาพสินค้า -->
-        {% if product.image %}
+            <!-- ภาพสินค้า -->
+            {% if product.image %}
             <img src="{{ product.image.url }}" alt="Product Image" class="image-preview">
-        {% endif %}
+            {% endif %}
 
-        <!-- ชื่อสินค้า -->
-        <label class="section-title">📌 ชื่อสินค้า</label>
-        <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
+            <!-- ชื่อสินค้า -->
+            <label class="section-title">📌 ชื่อสินค้า</label>
+            <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
 
-        <!-- คำอธิบายสินค้า -->
-        <label class="section-title">📝 คำอธิบาย</label>
-        <textarea name="description" class="form-control" rows="3">{{ product.description }}</textarea>
+            <!-- คำอธิบายสินค้า -->
+            <label class="section-title">📝 คำอธิบาย</label>
+            <textarea name="description" class="form-control" rows="3">{{ product.description }}</textarea>
 
-        <!-- ราคา -->
-        <label class="section-title">💰 ราคา</label>
-        <input type="number" name="price" class="form-control" value="{{ product.price }}" step="0.01" required>
+            <!-- ราคา -->
+            <label class="section-title">💰 ราคา</label>
+            <input type="number" name="price" class="form-control" value="{{ product.price }}" step="0.01" required>
 
-        <!-- จำนวนสินค้า -->
-        <label class="section-title">📦 จำนวนสินค้า</label>
-        <input type="number" name="quantity" class="form-control" value="{{ product.quantity }}" required>
+            <!-- จำนวนสินค้า -->
+            <label class="section-title">📦 จำนวนสินค้า</label>
+            <input type="number" name="quantity" class="form-control" value="{{ product.quantity }}" required min="0">
 
-        <!-- ขนาดสินค้า -->
-        <label class="section-title">📏 ขนาด</label>
-        <select name="size" class="form-control">
-            <option value="Small" {% if product.size == "Small" %}selected{% endif %}>Small</option>
-            <option value="Medium" {% if product.size == "Medium" %}selected{% endif %}>Medium</option>
-            <option value="Large" {% if product.size == "Large" %}selected{% endif %}>Large</option>
-            <option value="Extra Large" {% if product.size == "Extra Large" %}selected{% endif %}>Extra Large</option>
-        </select>
+            <!-- ขนาดสินค้า -->
+            <label class="section-title">📏 ขนาด</label>
+            <select name="size" class="form-control">
+                <option value="S" {% if product.size == "S" %}selected{% endif %}>Small</option>
+                <option value="M" {% if product.size == "M" %}selected{% endif %}>Medium</option>
+                <option value="L" {% if product.size == "L" %}selected{% endif %}>Large</option>
+                <option value="XL" {% if product.size == "XL" %}selected{% endif %}>Extra Large</option>
+                <option value="XXL" {% if product.size == "XXL" %}selected{% endif %}>Double Extra Large</option>
+            </select>
 
-        <!-- หมวดหมู่ -->
-        <label class="section-title">🏷️ หมวดหมู่</label>
-        <select name="category" class="form-control">
-            {% for category in categories %}
-                <option value="{{ category.id }}" {% if category.id == product.category.id %}selected{% endif %}>{{ category.name }}</option>
-            {% endfor %}
-        </select>
+            <!-- หมวดหมู่ -->
+            <label class="section-title">🏷️ หมวดหมู่</label>
+            <select name="category" class="form-control">
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if category in product.category.all %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
 
-        <!-- 📸 อัปโหลดรูปภาพใหม่ -->
-        <label class="section-title">📸 อัปโหลดรูปภาพใหม่</label>
-        <input type="file" name="image" class="form-control upload-section">
+            <!-- 📸 อัปโหลดรูปภาพใหม่ -->
+            <label class="section-title">📸 อัปโหลดรูปภาพใหม่</label>
+            <input type="file" name="image" class="form-control upload-section">
 
-        <!-- ✅ ปุ่มบันทึก -->
-        <button type="submit" class="btn-save">💾 บันทึกการเปลี่ยนแปลง</button>
+            <!-- ✅ ปุ่มบันทึก -->
+            <button type="submit" class="btn-save">💾 บันทึกการเปลี่ยนแปลง</button>
 
-        <!-- ปุ่มกลับไป Dashboard -->
-        <a href="{% url 'admin_dashboard' %}" class="btn btn-back">⬅️ กลับไปที่ Admin Dashboard</a>
-    </form>
-</div>
+            <!-- ปุ่มกลับไป Dashboard -->
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-back">⬅️ กลับไปที่ Admin Dashboard</a>
+        </form>
+    </div>
 
 </body>
+
 </html>

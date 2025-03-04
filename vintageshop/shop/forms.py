@@ -13,7 +13,6 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = ['name', 'description', 'price', 'quantity', 'size', 'category', 'image', 'new_category']
-        # Use a checkbox widget for multiple category selection
         widgets = {
             'category': forms.SelectMultiple(attrs={'style': 'width: 300px;'}),
         }
@@ -25,17 +24,20 @@ class ProductForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        # Save instance first if ManyToMany relationships are to be added later
+
+        # ✅ ตรวจสอบและบันทึก quantity ให้แน่ใจว่ามีการอัปเดตค่า
+        instance.quantity = self.cleaned_data.get('quantity', instance.quantity)
+
         if commit:
-            instance.save()
-            self.save_m2m()
-        
-        # Handle the new_category field
+            instance.save()  # ✅ บันทึก instance ก่อน
+            self.save_m2m()  # ✅ บันทึก ManyToManyField
+
+        # ✅ เพิ่ม category ใหม่หากมีการกรอก
         new_cat_name = self.cleaned_data.get('new_category')
         if new_cat_name:
             category_obj, created = Category.objects.get_or_create(name=new_cat_name)
-            # Add the new category to the product's many-to-many relationship
-            instance.category.add(category_obj)
+            instance.category.add(category_obj)  # ✅ เพิ่ม category ใหม่ให้สินค้า
+
         return instance
 
 class ChatForm(forms.ModelForm):
